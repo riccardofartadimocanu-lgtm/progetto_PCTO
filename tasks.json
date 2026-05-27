@@ -1,10 +1,10 @@
 {
-  "next_id": 15,
+  "next_id": 16,
   "tasks": [
     {
       "id": 4,
       "text": "kickoff tecnico",
-      "status": "progress"
+      "status": "done"
     },
     {
       "id": 5,
@@ -29,7 +29,7 @@
     {
       "id": 9,
       "text": "scelta framework webapp",
-      "status": "progress"
+      "status": "done"
     },
     {
       "id": 10,
@@ -55,6 +55,11 @@
       "id": 14,
       "text": "pipeline mock minima",
       "status": "todo"
+    },
+    {
+      "id": 15,
+      "text": "creazione framework",
+      "status": "progress"
     }
   ]
 }
