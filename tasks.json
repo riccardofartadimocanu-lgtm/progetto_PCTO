@@ -1,0 +1,65 @@
+{
+  "next_id": 16,
+  "tasks": [
+    {
+      "id": 4,
+      "text": "kickoff tecnico",
+      "status": "done"
+    },
+    {
+      "id": 5,
+      "text": "spiegazione del problema",
+      "status": "backlog"
+    },
+    {
+      "id": 6,
+      "text": "definizione ruoli",
+      "status": "progress"
+    },
+    {
+      "id": 7,
+      "text": "setup repository Git",
+      "status": "done"
+    },
+    {
+      "id": 8,
+      "text": "setup ambiente Python",
+      "status": "done"
+    },
+    {
+      "id": 9,
+      "text": "scelta framework webapp",
+      "status": "done"
+    },
+    {
+      "id": 10,
+      "text": "creazione struttura cartelle",
+      "status": "progress"
+    },
+    {
+      "id": 11,
+      "text": "creazione README iniziale",
+      "status": "done"
+    },
+    {
+      "id": 12,
+      "text": "creazione board attivit\u00e0",
+      "status": "done"
+    },
+    {
+      "id": 13,
+      "text": "prima visualizzazione immagine",
+      "status": "progress"
+    },
+    {
+      "id": 14,
+      "text": "pipeline mock minima",
+      "status": "todo"
+    },
+    {
+      "id": 15,
+      "text": "creazione framework",
+      "status": "progress"
+    }
+  ]
+}
