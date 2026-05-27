@@ -1,16 +1,36 @@
-body {
+
+
+html, body {
     margin: 0;
-    background: #111;
+    padding: 0;
+    height: 100%;
     overflow: hidden;
+    font-family: Arial;
 }
 
+body {
+    display: flex;
+}
+
+/* toolbar a sinistra */
 .toolbar {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    z-index: 10;
+    width: 220px;
+    background: #1e1e1e;
+    color: white;
+    padding: 10px;
 }
 
+/* contenitore canvas */
+#viewport {
+    flex: 1;
+    height: 100vh;   /* 🔥 QUESTO È IL FIX PRINCIPALE */
+    background: black;
+    position: relative;
+}
+
+/* canvas NON deve forzare size */
 canvas {
     display: block;
+    width: 100%;
+    height: 100%;
 }
