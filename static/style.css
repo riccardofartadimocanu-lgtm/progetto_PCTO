@@ -1,0 +1,16 @@
+body {
+    margin: 0;
+    background: #111;
+    overflow: hidden;
+}
+
+.toolbar {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 10;
+}
+
+canvas {
+    display: block;
+}
