@@ -4,6 +4,17 @@
     <title>Image Editor</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
+<div id="modal" class="modal hidden">
+    <div class="modal-content">
+        <h3>Eliminare punto?</h3>
+        <p id="modal-text"></p>
+
+        <div class="modal-actions">
+            <button id="cancelBtn">Annulla</button>
+            <button id="deleteBtn">Elimina</button>
+        </div>
+    </div>
+</div>
 <body>
 
 <div class="toolbar">
@@ -11,7 +22,17 @@
     <button id="editBtn">Edit: OFF</button>
     <input type="file" id="fileInput" hidden>
 </div>
-
+<div style="position:absolute; top:80px; left:10px; z-index:10; background:#222; padding:10px; color:white;">
+    <table border="1" id="pointsTable">
+        <thead>
+            <tr>
+                <th>X</th>
+                <th>Y</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
 <canvas id="canvas"></canvas>
 
 <script src="/static/script.js"></script>

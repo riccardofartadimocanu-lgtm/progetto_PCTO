@@ -14,3 +14,75 @@ body {
 canvas {
     display: block;
 }
+
+/* TABLE */
+table {
+    border-collapse: collapse;
+    width: 260px;
+    background: #1e1e1e;
+    color: white;
+    font-family: Arial;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+td, th {
+    padding: 10px;
+    text-align: left;
+}
+
+tr {
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+tr:hover {
+    background: #333;
+}
+
+/* MODAL */
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal.hidden {
+    display: none;
+}
+
+.modal-content {
+    background: #222;
+    color: white;
+    padding: 20px;
+    border-radius: 12px;
+    min-width: 280px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    text-align: center;
+}
+
+.modal-actions {
+    margin-top: 15px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.modal button {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+#deleteBtn {
+    background: #e74c3c;
+    color: white;
+}
+
+#cancelBtn {
+    background: #555;
+    color: white;
+}

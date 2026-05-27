@@ -71,3 +71,63 @@ editBtn.onclick = () => {
     editMode = !editMode;
     editBtn.innerText = editMode ? "Edit: ON" : "Edit: OFF";
 };
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    let points = [
+        { x: 10, y: 20 },
+        { x: 30, y: 40 },
+        { x: 50, y: 60 }
+    ];
+
+    const modal = document.getElementById("modal");
+    const modalText = document.getElementById("modal-text");
+    const cancelBtn = document.getElementById("cancelBtn");
+    const deleteBtn = document.getElementById("deleteBtn");
+
+    let selectedIndex = null;
+
+    function renderTable() {
+        const tbody = document.querySelector("#pointsTable tbody");
+        tbody.innerHTML = "";
+
+        points.forEach((p, index) => {
+            const row = document.createElement("tr");
+
+            row.innerHTML = `
+                <td>${p.x}</td>
+                <td>${p.y}</td>
+            `;
+
+            row.onclick = () => openModal(index);
+
+            tbody.appendChild(row);
+        });
+    }
+
+    function openModal(index) {
+        selectedIndex = index;
+
+        const p = points[index];
+        modalText.textContent = `X: ${p.x}, Y: ${p.y}`;
+
+        modal.classList.remove("hidden");
+    }
+
+    function closeModal() {
+        modal.classList.add("hidden");
+        selectedIndex = null;
+    }
+
+    cancelBtn.onclick = closeModal;
+
+    deleteBtn.onclick = () => {
+        if (selectedIndex !== null) {
+            points.splice(selectedIndex, 1);
+            renderTable();
+        }
+        closeModal();
+    };
+
+    renderTable();
+});
