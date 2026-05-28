@@ -122,15 +122,25 @@ function render() {
 
     ctx.drawImage(state.image, imgX, imgY, w, h);
 
-    state.points.forEach(p => {
-        const px = imgX + p.x * state.scale;
-        const py = imgY + p.y * state.scale;
+state.points.forEach(p => {
+    const px = imgX + p.x * state.scale;
+    const py = imgY + p.y * state.scale;
 
-        ctx.fillStyle = "red";
-        ctx.beginPath();
-        ctx.arc(px, py, 5, 0, Math.PI * 2);
-        ctx.fill();
-    });
+    ctx.strokeStyle = "red";
+    ctx.lineWidth = 2;
+
+    // linea orizzontale
+    ctx.beginPath();
+    ctx.moveTo(px - 6, py);
+    ctx.lineTo(px + 6, py);
+    ctx.stroke();
+
+    // linea verticale
+    ctx.beginPath();
+    ctx.moveTo(px, py - 6);
+    ctx.lineTo(px, py + 6);
+    ctx.stroke();
+});
 
     renderTable();
     renderDebug();
