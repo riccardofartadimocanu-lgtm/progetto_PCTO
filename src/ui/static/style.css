@@ -110,3 +110,55 @@ canvas {
     justify-content: space-between;
     margin-top: 10px;
 }
+
+/* BOTTONI GENERALI */
+.toolbar button,
+#clearBtn {
+    padding: 10px;
+    border: none;
+    cursor: pointer;
+    color: white;
+    font-weight: bold;
+    border-radius: 6px;
+    transition: 0.2s;
+}
+
+#loadBtn {
+    background: #2d7ef7;
+}
+
+#loadBtn:hover {
+    background: #5598ff;
+}
+#saveBtn {
+    background: #545454;
+}
+
+#saveBtn:hover {
+    background: #9c97a2;
+}
+#clearBtn {
+    width: 100%;
+    margin-top: 10px;
+    background: #d4a017;
+}
+
+#clearBtn:hover {
+    background: #f0b90b;
+}
+
+.edit-off {
+    background: #c0392b;
+}
+
+.edit-off:hover {
+    background: #e74c3c;
+}
+
+.edit-on {
+    background: #1f9d55;
+}
+
+.edit-on:hover {
+    background: #28c76f;
+}

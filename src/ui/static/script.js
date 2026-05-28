@@ -4,7 +4,9 @@ const ctx = canvas.getContext("2d");
 const fileInput = document.getElementById("fileInput");
 const loadBtn = document.getElementById("loadBtn");
 const editBtn = document.getElementById("editBtn");
+editBtn.classList.add("edit-off");
 const saveBtn = document.getElementById("saveBtn");
+const clearBtn = document.getElementById("clearBtn");
 
 const modal = document.getElementById("modal");
 const modalText = document.getElementById("modal-text");
@@ -47,7 +49,16 @@ function setEditMode(value) {
     if (isLocked()) return;
 
     state.edit = value;
+
     editBtn.innerText = state.edit ? "Edit ON" : "Edit OFF";
+
+    editBtn.classList.remove("edit-on", "edit-off");
+
+    if (state.edit) {
+        editBtn.classList.add("edit-on");
+    } else {
+        editBtn.classList.add("edit-off");
+    }
 }
 
 function setLockedUI(locked) {
@@ -126,7 +137,7 @@ state.points.forEach(p => {
     const px = imgX + p.x * state.scale;
     const py = imgY + p.y * state.scale;
 
-    ctx.strokeStyle = "red";
+    ctx.strokeStyle = "yellow";
     ctx.lineWidth = 2;
 
     // linea orizzontale
@@ -187,6 +198,16 @@ canvas.addEventListener("wheel", (e) => {
 
     render();
 });
+
+/* =========================
+   CLEAR ALL POINTS
+========================= */
+clearBtn.onclick = () => {
+    if (isLocked()) return;
+
+    state.points = [];
+    render();
+};
 
 /* =========================
    EDIT BUTTON
