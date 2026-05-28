@@ -6,6 +6,12 @@ const loadBtn = document.getElementById("loadBtn");
 const editBtn = document.getElementById("editBtn");
 const saveBtn = document.getElementById("saveBtn");
 
+const modal = document.getElementById("modal");
+const modalText = document.getElementById("modal-text");
+const cancelBtn = document.getElementById("cancelBtn");
+const deleteBtn = document.getElementById("deleteBtn");
+const tbody = document.querySelector("#pointsTable tbody");
+
 let state = {
     image: null,
     loaded: false,
@@ -17,40 +23,50 @@ let state = {
 
 let imgX = 0;
 let imgY = 0;
+let selectedIndex = null;
 
-// =====================
-// RESIZE CANVAS
-// =====================
+/* =========================
+   FIX CANVAS SIZE (CRUCIALE)
+========================= */
 function resizeCanvas() {
-    canvas.width = canvas.offsetWidth;
-    canvas.height = canvas.offsetHeight;
-}
-window.addEventListener("resize", resizeCanvas);
-resizeCanvas();
+    const workspace = document.getElementById("workspace");
+    const rect = workspace.getBoundingClientRect();
 
-// =====================
-// LOAD IMAGE
-// =====================
+    canvas.width = rect.width;
+    canvas.height = rect.height;
+
+    render();
+}
+
+window.addEventListener("load", () => {
+    resizeCanvas();
+});
+
+window.addEventListener("resize", resizeCanvas);
+
+/* extra safety */
+const ro = new ResizeObserver(() => resizeCanvas());
+ro.observe(document.getElementById("workspace"));
+
+/* =========================
+   LOAD IMAGE
+========================= */
 loadBtn.onclick = () => fileInput.click();
 
 fileInput.onchange = (e) => {
     const file = e.target.files[0];
+    if (!file) return;
+
     const reader = new FileReader();
 
     reader.onload = (event) => {
-
         state.image = new Image();
         state.image.src = event.target.result;
 
         state.image.onload = () => {
-
             state.loaded = true;
             state.scale = 1;
             state.points = [];
-            state.edit = false;
-            state.saved = false;
-
-            editBtn.innerText = "Edit OFF";
 
             render();
         };
@@ -59,13 +75,13 @@ fileInput.onchange = (e) => {
     reader.readAsDataURL(file);
 };
 
-// =====================
-// RENDER
-// =====================
+/* =========================
+   RENDER
+========================= */
 function render() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    if (!state.loaded) return;
+    if (!state.loaded || !state.image) return;
 
     const w = state.image.width * state.scale;
     const h = state.image.height * state.scale;
@@ -85,35 +101,48 @@ function render() {
         ctx.fill();
     });
 
+    renderTable();
     renderDebug();
 }
 
-// =====================
-// CLICK → ADD POINT (MOCK PIPELINE)
-// =====================
+/* =========================
+   CLICK ADD POINT
+========================= */
 canvas.addEventListener("click", (e) => {
-
-    if (!state.loaded || !state.edit || state.saved) return;
+    if (!state.loaded || !state.edit) return;
 
     const rect = canvas.getBoundingClientRect();
 
-    const x = (e.clientX - rect.left - imgX) / state.scale;
-    const y = (e.clientY - rect.top - imgY) / state.scale;
+    // coordinate nel canvas
+    const cx = e.clientX - rect.left;
+    const cy = e.clientY - rect.top;
 
-    // MOCK PIPELINE CALL (solo simulazione)
-    console.log("[MOCK PIPELINE] addPoint", x, y);
+    // coordinate relative all'immagine (IMPORTANTISSIMO)
+    const x = (cx - imgX) / state.scale;
+    const y = (cy - imgY) / state.scale;
+
+    // ❌ fuori immagine → blocca
+    if (!isInsideImage(x, y)) return;
 
     state.points.push({ x, y });
 
     render();
 });
 
-// =====================
-// ZOOM
-// =====================
-canvas.addEventListener("wheel", (e) => {
+function isInsideImage(x, y) {
+    return (
+        x >= 0 &&
+        y >= 0 &&
+        x <= state.image.width &&
+        y <= state.image.height
+    );
+}
 
-    if (!state.loaded || !state.edit || state.saved) return;
+/* =========================
+   ZOOM
+========================= */
+canvas.addEventListener("wheel", (e) => {
+    if (!state.loaded || !state.edit) return;
 
     state.scale *= (e.deltaY < 0) ? 1.1 : 0.9;
     state.scale = Math.max(0.2, Math.min(state.scale, 5));
@@ -121,47 +150,66 @@ canvas.addEventListener("wheel", (e) => {
     render();
 });
 
-// =====================
-// EDIT MODE
-// =====================
+/* =========================
+   EDIT
+========================= */
 editBtn.onclick = () => {
-
-    if (state.saved) return;
-
     state.edit = !state.edit;
     editBtn.innerText = state.edit ? "Edit ON" : "Edit OFF";
 };
 
-// =====================
-// SAVE (MOCK)
-// =====================
+/* =========================
+   SAVE
+========================= */
 saveBtn.onclick = () => {
-
-    if (!state.loaded) return;
-
     state.edit = false;
-    state.saved = true;
-
-    editBtn.innerText = "Edit OFF";
-
-    // MOCK PIPELINE CALL
-    console.log("[MOCK PIPELINE] save");
-
-    alert("Salvataggio effettuato (mock)");
-
-    render();
+    console.log(state.points);
+    alert("Saved (mock)");
 };
 
-// =====================
-// DEBUG
-// =====================
-function renderDebug() {
+/* =========================
+   TABLE
+========================= */
+function renderTable() {
+    tbody.innerHTML = "";
 
+    state.points.forEach((p, i) => {
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+            <td>${p.x.toFixed(2)}</td>
+            <td>${p.y.toFixed(2)}</td>
+        `;
+
+        row.onclick = () => {
+            selectedIndex = i;
+            modalText.textContent = `X: ${p.x}, Y: ${p.y}`;
+            modal.classList.remove("hidden");
+        };
+
+        tbody.appendChild(row);
+    });
+}
+
+/* =========================
+   MODAL
+========================= */
+cancelBtn.onclick = () => modal.classList.add("hidden");
+
+deleteBtn.onclick = () => {
+    if (selectedIndex !== null) {
+        state.points.splice(selectedIndex, 1);
+        render();
+    }
+    modal.classList.add("hidden");
+};
+
+/* =========================
+   DEBUG
+========================= */
+function renderDebug() {
     document.getElementById("debug").innerText =
-`MOCK PIPELINE UI
------------------
-points: ${state.points.length}
+`points: ${state.points.length}
 scale: ${state.scale.toFixed(2)}
-edit: ${state.edit}
-saved: ${state.saved}`;
+edit: ${state.edit}`;
 }
