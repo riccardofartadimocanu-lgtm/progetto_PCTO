@@ -4,26 +4,27 @@ const ctx = canvas.getContext("2d");
 const fileInput = document.getElementById("fileInput");
 const loadBtn = document.getElementById("loadBtn");
 const editBtn = document.getElementById("editBtn");
+const saveBtn = document.getElementById("saveBtn");
 
 let state = {
     image: null,
     loaded: false,
     scale: 1,
     points: [],
-    edit: false
+    edit: false,
+    saved: false
 };
 
 let imgX = 0;
 let imgY = 0;
 
 // =====================
-// RESIZE CANVAS (FIX SFASAMENTO)
+// RESIZE CANVAS
 // =====================
 function resizeCanvas() {
     canvas.width = canvas.offsetWidth;
     canvas.height = canvas.offsetHeight;
 }
-
 window.addEventListener("resize", resizeCanvas);
 resizeCanvas();
 
@@ -37,13 +38,20 @@ fileInput.onchange = (e) => {
     const reader = new FileReader();
 
     reader.onload = (event) => {
+
         state.image = new Image();
         state.image.src = event.target.result;
 
         state.image.onload = () => {
+
             state.loaded = true;
             state.scale = 1;
             state.points = [];
+            state.edit = false;
+            state.saved = false;
+
+            editBtn.innerText = "Edit OFF";
+
             render();
         };
     };
@@ -52,7 +60,7 @@ fileInput.onchange = (e) => {
 };
 
 // =====================
-// RENDER PIPELINE
+// RENDER
 // =====================
 function render() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -65,10 +73,8 @@ function render() {
     imgX = (canvas.width - w) / 2;
     imgY = (canvas.height - h) / 2;
 
-    // immagine
     ctx.drawImage(state.image, imgX, imgY, w, h);
 
-    // punti
     state.points.forEach(p => {
         const px = imgX + p.x * state.scale;
         const py = imgY + p.y * state.scale;
@@ -83,15 +89,19 @@ function render() {
 }
 
 // =====================
-// CLICK → ADD POINT (FIX COORDINATE)
+// CLICK → ADD POINT (MOCK PIPELINE)
 // =====================
 canvas.addEventListener("click", (e) => {
-    if (!state.loaded || !state.edit) return;
+
+    if (!state.loaded || !state.edit || state.saved) return;
 
     const rect = canvas.getBoundingClientRect();
 
     const x = (e.clientX - rect.left - imgX) / state.scale;
     const y = (e.clientY - rect.top - imgY) / state.scale;
+
+    // MOCK PIPELINE CALL (solo simulazione)
+    console.log("[MOCK PIPELINE] addPoint", x, y);
 
     state.points.push({ x, y });
 
@@ -102,11 +112,10 @@ canvas.addEventListener("click", (e) => {
 // ZOOM
 // =====================
 canvas.addEventListener("wheel", (e) => {
-    if (!state.loaded || !state.edit) return;
 
-    if (e.deltaY < 0) state.scale *= 1.1;
-    else state.scale *= 0.9;
+    if (!state.loaded || !state.edit || state.saved) return;
 
+    state.scale *= (e.deltaY < 0) ? 1.1 : 0.9;
     state.scale = Math.max(0.2, Math.min(state.scale, 5));
 
     render();
@@ -116,18 +125,43 @@ canvas.addEventListener("wheel", (e) => {
 // EDIT MODE
 // =====================
 editBtn.onclick = () => {
+
+    if (state.saved) return;
+
     state.edit = !state.edit;
     editBtn.innerText = state.edit ? "Edit ON" : "Edit OFF";
 };
 
 // =====================
-// DEBUG PIPELINE
+// SAVE (MOCK)
+// =====================
+saveBtn.onclick = () => {
+
+    if (!state.loaded) return;
+
+    state.edit = false;
+    state.saved = true;
+
+    editBtn.innerText = "Edit OFF";
+
+    // MOCK PIPELINE CALL
+    console.log("[MOCK PIPELINE] save");
+
+    alert("Salvataggio effettuato (mock)");
+
+    render();
+};
+
+// =====================
+// DEBUG
 // =====================
 function renderDebug() {
+
     document.getElementById("debug").innerText =
-        `PIPELINE STATE
+`MOCK PIPELINE UI
 -----------------
 points: ${state.points.length}
 scale: ${state.scale.toFixed(2)}
-edit: ${state.edit}`;
+edit: ${state.edit}
+saved: ${state.saved}`;
 }
