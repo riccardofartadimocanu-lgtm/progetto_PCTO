@@ -7,6 +7,7 @@ const editBtn = document.getElementById("editBtn");
 editBtn.classList.add("edit-off");
 const saveBtn = document.getElementById("saveBtn");
 const clearBtn = document.getElementById("clearBtn");
+const loadSaveBtn = document.getElementById("loadSaveBtn");
 
 const modal = document.getElementById("modal");
 const modalText = document.getElementById("modal-text");
@@ -207,6 +208,13 @@ clearBtn.onclick = () => {
 
     state.points = [];
     render();
+};
+
+/*=========================
+    LOAD BUTTON
+===========================*/
+loadSaveBtn.onclick = () => {
+    // PROTOTIPO FUTURO
 };
 
 /* =========================

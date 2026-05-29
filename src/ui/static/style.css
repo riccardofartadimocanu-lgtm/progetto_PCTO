@@ -35,7 +35,7 @@ html, body {
     flex: 1;
     overflow-y: auto;
     min-height: 0;
-    max-height: 40%;
+    max-height: 100%;
 }
 
 table {
@@ -161,4 +161,22 @@ canvas {
 
 .edit-on:hover {
     background: #28c76f;
+}
+
+#loadSaveBtn {
+    width: 100%;
+    margin-top: 10px;
+    padding: 10px;
+    border: none;
+    cursor: pointer;
+    color: white;
+    font-weight: bold;
+    border-radius: 6px;
+    transition: 0.2s;
+
+    background: #2d7ef7;
+}
+
+#loadSaveBtn:hover {
+    background: #5598ff;
 }
