@@ -14,23 +14,29 @@ html, body {
     top: 0;
     bottom: 0;
     width: 280px;
-    background: #1e1e1e;
+
+    background: #181818;
+
     color: white;
-    padding: 10px;
+    padding: 12px;
+
     box-sizing: border-box;
+
     display: flex;
     flex-direction: column;
+
+    border-right: 1px solid #2b2b2b;
 }
 
-/* toolbar */
+/* TOOLBAR */
 .toolbar {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
     margin-bottom: 20px;
 }
 
-/* table */
+/* TABLE */
 .tableBox {
     flex: 1;
     overflow-y: auto;
@@ -41,22 +47,28 @@ html, body {
 table {
     width: 100%;
     border-collapse: collapse;
-    background: #222;
+
+    background: #1f1f1f;
     color: white;
+
+    border-radius: 10px;
+    overflow: hidden;
 }
 
 td, th {
-    padding: 8px;
+    padding: 10px;
+    border-bottom: 1px solid #333;
 }
 
 tr:hover {
-    background: #333;
+    background: #2d2d2d;
     cursor: pointer;
 }
 
 /* RIGHT WORKSPACE */
 #workspace {
     position: absolute;
+
     left: 280px;
     right: 0;
     top: 0;
@@ -75,20 +87,32 @@ canvas {
 /* DEBUG */
 #debug {
     position: absolute;
+
     top: 10px;
     right: 10px;
+
     background: rgba(0,0,0,0.7);
-    color: lime;
+
+    color: #00ff88;
+
     padding: 10px;
+
     font-size: 12px;
+
+    border-radius: 8px;
+
     white-space: pre;
+
+    border: 1px solid #1f1f1f;
 }
 
 /* MODAL */
 .modal {
     position: fixed;
     inset: 0;
+
     background: rgba(0,0,0,0.6);
+
     display: flex;
     justify-content: center;
     align-items: center;
@@ -99,84 +123,124 @@ canvas {
 }
 
 .modal-content {
-    background: #222;
+    background: #1f1f1f;
+
     color: white;
+
     padding: 20px;
-    border-radius: 12px;
+
+    border-radius: 14px;
+
+    min-width: 300px;
+
+    box-shadow: 0 10px 25px rgba(0,0,0,0.45);
 }
 
 .modal-actions {
     display: flex;
     justify-content: space-between;
-    margin-top: 10px;
+    margin-top: 15px;
 }
 
 /* BOTTONI GENERALI */
 .toolbar button,
-#clearBtn {
-    padding: 10px;
+#clearBtn,
+#loadSaveBtn {
+    padding: 11px;
+
     border: none;
+
     cursor: pointer;
+
     color: white;
-    font-weight: bold;
-    border-radius: 6px;
-    transition: 0.2s;
+
+    font-weight: 600;
+
+    border-radius: 10px;
+
+    transition:
+        transform 0.15s ease,
+        background 0.2s ease,
+        box-shadow 0.2s ease;
+
+    box-shadow: 0 4px 12px rgba(0,0,0,0.35);
 }
 
+/* CLICK EFFECT */
+.toolbar button:active,
+#clearBtn:active,
+#loadSaveBtn:active {
+    transform: scale(0.97);
+}
+
+/* LOAD */
 #loadBtn {
-    background: #2d7ef7;
+    background: linear-gradient(135deg, #2563eb, #3b82f6);
 }
 
 #loadBtn:hover {
-    background: #5598ff;
+    background: linear-gradient(135deg, #3b82f6, #60a5fa);
+
+    box-shadow: 0 0 15px rgba(59,130,246,0.5);
 }
+
+/* SAVE */
 #saveBtn {
-    background: #545454;
+    background: linear-gradient(135deg, #4b5563, #6b7280);
 }
 
 #saveBtn:hover {
-    background: #9c97a2;
+    background: linear-gradient(135deg, #6b7280, #9ca3af);
+
+    box-shadow: 0 0 15px rgba(156,163,175,0.35);
 }
+
+/* CLEAR */
 #clearBtn {
     width: 100%;
     margin-top: 10px;
-    background: #d4a017;
+
+    background: linear-gradient(135deg, #ca8a04, #eab308);
 }
 
 #clearBtn:hover {
-    background: #f0b90b;
+    background: linear-gradient(135deg, #eab308, #facc15);
+
+    box-shadow: 0 0 15px rgba(250,204,21,0.4);
 }
 
+/* EDIT OFF */
 .edit-off {
-    background: #c0392b;
+    background: linear-gradient(135deg, #b91c1c, #ef4444);
 }
 
 .edit-off:hover {
-    background: #e74c3c;
+    background: linear-gradient(135deg, #ef4444, #f87171);
+
+    box-shadow: 0 0 15px rgba(248,113,113,0.45);
 }
 
+/* EDIT ON */
 .edit-on {
-    background: #1f9d55;
+    background: linear-gradient(135deg, #15803d, #22c55e);
 }
 
 .edit-on:hover {
-    background: #28c76f;
+    background: linear-gradient(135deg, #22c55e, #4ade80);
+
+    box-shadow: 0 0 15px rgba(74,222,128,0.45);
 }
 
+/* LOAD SAVE */
 #loadSaveBtn {
     width: 100%;
     margin-top: 10px;
-    padding: 10px;
-    border: none;
-    cursor: pointer;
-    color: white;
-    font-weight: bold;
-    border-radius: 6px;
-    transition: 0.2s;
 
-    background: #2d7ef7;
+    background: linear-gradient(135deg, #7c3aed, #8b5cf6);
 }
 
 #loadSaveBtn:hover {
-    background: #5598ff;
+    background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+
+    box-shadow: 0 0 15px rgba(167,139,250,0.45);
 }
