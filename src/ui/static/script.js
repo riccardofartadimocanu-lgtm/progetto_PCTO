@@ -5,6 +5,7 @@ const fileInput = document.getElementById("fileInput");
 const loadBtn = document.getElementById("loadBtn");
 const editBtn = document.getElementById("editBtn");
 editBtn.classList.add("edit-off");
+
 const saveBtn = document.getElementById("saveBtn");
 const clearBtn = document.getElementById("clearBtn");
 const loadSaveBtn = document.getElementById("loadSaveBtn");
@@ -13,8 +14,12 @@ const modal = document.getElementById("modal");
 const modalText = document.getElementById("modal-text");
 const cancelBtn = document.getElementById("cancelBtn");
 const deleteBtn = document.getElementById("deleteBtn");
+
 const tbody = document.querySelector("#pointsTable tbody");
 
+/* =========================
+   STATE
+========================= */
 let state = {
     image: null,
     loaded: false,
@@ -34,17 +39,19 @@ let pan = {
     offsetX: 0,
     offsetY: 0
 };
+
 let selectedIndex = null;
+let hoverIndex = null;
 
 /* =========================
-   LOCK SYSTEM (IMPORTANT)
+   LOCK SYSTEM
 ========================= */
 function isLocked() {
     return state.saved === true;
 }
 
 /* =========================
-   EDIT MODE CONTROL
+   EDIT MODE
 ========================= */
 function setEditMode(value) {
     if (isLocked()) return;
@@ -88,7 +95,7 @@ const ro = new ResizeObserver(() => resizeCanvas());
 ro.observe(document.getElementById("workspace"));
 
 /* =========================
-   LOAD IMAGE (RESET STATE)
+   LOAD IMAGE
 ========================= */
 loadBtn.onclick = () => fileInput.click();
 
@@ -122,44 +129,12 @@ fileInput.onchange = (e) => {
    RENDER
 ========================= */
 function render() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    if (!state.loaded || !state.image) return;
-
-    const w = state.image.width * state.scale;
-    const h = state.image.height * state.scale;
-
-    imgX = (canvas.width - w) / 2 + pan.offsetX;
-    imgY = (canvas.height - h) / 2 + pan.offsetY;
-
-    ctx.drawImage(state.image, imgX, imgY, w, h);
-
-state.points.forEach(p => {
-    const px = imgX + p.x * state.scale;
-    const py = imgY + p.y * state.scale;
-
-    ctx.strokeStyle = "yellow";
-    ctx.lineWidth = 2;
-
-    // linea orizzontale
-    ctx.beginPath();
-    ctx.moveTo(px - 6, py);
-    ctx.lineTo(px + 6, py);
-    ctx.stroke();
-
-    // linea verticale
-    ctx.beginPath();
-    ctx.moveTo(px, py - 6);
-    ctx.lineTo(px, py + 6);
-    ctx.stroke();
-});
-
+    drawOnlyCanvas();
     renderTable();
-    renderDebug();
 }
 
 /* =========================
-   ADD POINT (CLICK)
+   CLICK TO ADD POINT
 ========================= */
 canvas.addEventListener("click", (e) => {
     if (!state.loaded || !state.edit || isLocked()) return;
@@ -201,7 +176,7 @@ canvas.addEventListener("wheel", (e) => {
 });
 
 /* =========================
-   CLEAR ALL POINTS
+   CLEAR POINTS
 ========================= */
 clearBtn.onclick = () => {
     if (isLocked()) return;
@@ -210,11 +185,11 @@ clearBtn.onclick = () => {
     render();
 };
 
-/*=========================
-    LOAD BUTTON
-===========================*/
+/* =========================
+   LOAD SAVE (PROTOTYPE)
+========================= */
 loadSaveBtn.onclick = () => {
-    // PROTOTIPO FUTURO
+    // futuro
 };
 
 /* =========================
@@ -226,7 +201,7 @@ editBtn.onclick = () => {
 };
 
 /* =========================
-   SAVE (FULL LOCK)
+   SAVE
 ========================= */
 saveBtn.onclick = () => {
     state.saved = true;
@@ -251,16 +226,29 @@ function renderTable() {
             <td>${p.y.toFixed(2)}</td>
         `;
 
-        row.onclick = () => {
+        row.addEventListener("mouseenter", () => {
+            hoverIndex = i;
+            drawOnlyCanvas();
+        });
+
+        row.addEventListener("mouseleave", () => {
+            hoverIndex = null;
+            drawOnlyCanvas();
+        });
+
+        row.addEventListener("click", () => {
             selectedIndex = i;
+            hoverIndex = null;
+
             modalText.textContent = `X: ${p.x}, Y: ${p.y}`;
             modal.classList.remove("hidden");
-        };
+
+            drawOnlyCanvas();
+        });
 
         tbody.appendChild(row);
     });
 }
-
 /* =========================
    MODAL DELETE
 ========================= */
@@ -274,13 +262,14 @@ deleteBtn.onclick = () => {
     modal.classList.add("hidden");
 };
 
-//PAN
+/* =========================
+   PAN
+========================= */
 canvas.addEventListener("mousedown", (e) => {
     if (e.button !== 2) return;
     if (!state.loaded || !state.edit || isLocked()) return;
 
     pan.active = true;
-    
     pan.startX = e.clientX;
     pan.startY = e.clientY;
 });
@@ -300,12 +289,10 @@ canvas.addEventListener("mousemove", (e) => {
     render();
 });
 
-//STOP PAN
 window.addEventListener("mouseup", () => {
     pan.active = false;
 });
 
-//BLOCK DEFAULT R_CLICK
 canvas.addEventListener("contextmenu", (e) => {
     e.preventDefault();
 });
@@ -319,4 +306,43 @@ function renderDebug() {
 scale: ${state.scale.toFixed(2)}
 edit: ${state.edit}
 saved: ${state.saved}`;
+}
+
+function drawOnlyCanvas() {
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (!state.loaded || !state.image) return;
+
+    const w = state.image.width * state.scale;
+    const h = state.image.height * state.scale;
+
+    imgX = (canvas.width - w) / 2 + pan.offsetX;
+    imgY = (canvas.height - h) / 2 + pan.offsetY;
+
+    ctx.drawImage(state.image, imgX, imgY, w, h);
+
+    state.points.forEach((p, i) => {
+        const px = imgX + p.x * state.scale;
+        const py = imgY + p.y * state.scale;
+
+        const isHover = hoverIndex === i;
+
+        ctx.strokeStyle = isHover ? "red" : "yellow";
+        ctx.lineWidth = isHover ? 4 : 2;
+
+        const size = isHover ? 10 : 6;
+
+        ctx.beginPath();
+        ctx.moveTo(px - size, py);
+        ctx.lineTo(px + size, py);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(px, py - size);
+        ctx.lineTo(px, py + size);
+        ctx.stroke();
+    });
+
+    renderDebug();
 }
