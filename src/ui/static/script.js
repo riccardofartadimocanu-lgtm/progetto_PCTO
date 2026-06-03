@@ -5,11 +5,11 @@ const fileInput = document.getElementById("fileInput");
 const loadBtn = document.getElementById("loadBtn");
 const editBtn = document.getElementById("editBtn");
 editBtn.classList.add("edit-off");
-const cursorCoords = document.getElementById("cursorCoords");
 
 const saveBtn = document.getElementById("saveBtn");
 const clearBtn = document.getElementById("clearBtn");
 const loadSaveBtn = document.getElementById("loadSaveBtn");
+const cursorCoords = document.getElementById("cursorCoords");
 
 const modal = document.getElementById("modal");
 const modalText = document.getElementById("modal-text");
@@ -312,27 +312,6 @@ canvas.addEventListener("mousedown", (e) => {
 });
 
 canvas.addEventListener("mousemove", (e) => {
-    if (!pan.active || !state.edit || isLocked()) return;
-
-    const dx = e.clientX - pan.startX;
-    const dy = e.clientY - pan.startY;
-
-    pan.offsetX += dx;
-    pan.offsetY += dy;
-
-    clampPan();
-
-    pan.startX = e.clientX;
-    pan.startY = e.clientY;
-
-    render();
-});
-canvas.addEventListener("mousemove", (e) => {
-
-    if (!state.loaded) {
-        cursorCoords.style.display = "none";
-        return;
-    }
 
     const rect = canvas.getBoundingClientRect();
 
@@ -342,13 +321,34 @@ canvas.addEventListener("mousemove", (e) => {
     const x = (cx - imgX) / state.scale;
     const y = (cy - imgY) / state.scale;
 
-    if (!isInsideImage(x, y)) {
+    // =====================
+    // PAN
+    // =====================
+    if (pan.active && state.edit && !isLocked()) {
+
+        const dx = e.clientX - pan.startX;
+        const dy = e.clientY - pan.startY;
+
+        pan.offsetX += dx;
+        pan.offsetY += dy;
+
+        clampPan();
+
+        pan.startX = e.clientX;
+        pan.startY = e.clientY;
+
+        render();
+    }
+
+    // =====================
+    // CURSORE COORDS
+    // =====================
+    if (!state.loaded || !isInsideImage(x, y)) {
         cursorCoords.style.display = "none";
         return;
     }
 
     cursorCoords.style.display = "block";
-
     cursorCoords.style.left = (cx + 15) + "px";
     cursorCoords.style.top = (cy + 15) + "px";
 

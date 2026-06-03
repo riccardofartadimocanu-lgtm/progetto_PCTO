@@ -259,3 +259,23 @@ canvas {
 
     box-shadow: 0 0 15px rgba(167,139,250,0.45);
 }
+
+#cursorCoords {
+    position: absolute;
+    pointer-events: none;
+
+    background: rgba(0,0,0,0.8);
+    color: white;
+
+    padding: 4px 8px;
+    border-radius: 4px;
+
+    font-size: 12px;
+    font-family: monospace;
+
+    display: none;
+    z-index: 1000;
+}
+.hidden {
+    display: none;
+}
