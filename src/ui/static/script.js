@@ -394,15 +394,22 @@ function drawOnlyCanvas() {
 savePointBtn.addEventListener("click", () => {
     if (!pendingPoint) return;
 
+    const xm = xmInput.value.trim();
+    const ym = ymInput.value.trim();
+
+    if (xm === "" || ym === "" || xm <= 0 || ym <= 0) {
+        alert("Inserisci sia Xm che Ym");
+        return;
+    }
+
     state.points.push({
         x: pendingPoint.x,
         y: pendingPoint.y,
-        xm: Number(xmInput.value),
-        ym: Number(ymInput.value)
+        xm: Number(xm),
+        ym: Number(ym)
     });
 
     pendingPoint = null;
-
     pointModal.classList.add("hidden");
 
     render();
