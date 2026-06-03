@@ -183,6 +183,8 @@ canvas.addEventListener("wheel", (e) => {
     state.scale *= (e.deltaY < 0) ? 1.1 : 0.9;
     state.scale = Math.max(0.1, Math.min(state.scale, 10));
 
+    clampPan();
+
     render();
 });
 
@@ -278,6 +280,28 @@ deleteBtn.onclick = () => {
 /* =========================
    PAN
 ========================= */
+
+function clampPan() {
+
+    if (!state.loaded || !state.image) return;
+
+    const w = state.image.width * state.scale;
+    const h = state.image.height * state.scale;
+
+    const halfCanvasW = canvas.width / 2;
+    const halfCanvasH = canvas.height / 2;
+
+    const halfImgW = w / 2;
+    const halfImgH = h / 2;
+
+    // limite reale: il bordo dell'immagine non può superare il centro del canvas
+    const maxOffsetX = Math.max(halfImgW, halfCanvasW);
+    const maxOffsetY = Math.max(halfImgH, halfCanvasH);
+
+    pan.offsetX = Math.max(-maxOffsetX, Math.min(maxOffsetX, pan.offsetX));
+    pan.offsetY = Math.max(-maxOffsetY, Math.min(maxOffsetY, pan.offsetY));
+}
+
 canvas.addEventListener("mousedown", (e) => {
     if (e.button !== 2) return;
     if (!state.loaded || !state.edit || isLocked()) return;
@@ -295,6 +319,8 @@ canvas.addEventListener("mousemove", (e) => {
 
     pan.offsetX += dx;
     pan.offsetY += dy;
+
+    clampPan();
 
     pan.startX = e.clientX;
     pan.startY = e.clientY;
