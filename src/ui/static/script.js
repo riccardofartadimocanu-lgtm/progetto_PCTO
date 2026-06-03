@@ -5,6 +5,7 @@ const fileInput = document.getElementById("fileInput");
 const loadBtn = document.getElementById("loadBtn");
 const editBtn = document.getElementById("editBtn");
 editBtn.classList.add("edit-off");
+const cursorCoords = document.getElementById("cursorCoords");
 
 const saveBtn = document.getElementById("saveBtn");
 const clearBtn = document.getElementById("clearBtn");
@@ -299,6 +300,38 @@ canvas.addEventListener("mousemove", (e) => {
     pan.startY = e.clientY;
 
     render();
+});
+canvas.addEventListener("mousemove", (e) => {
+
+    if (!state.loaded) {
+        cursorCoords.style.display = "none";
+        return;
+    }
+
+    const rect = canvas.getBoundingClientRect();
+
+    const cx = e.clientX - rect.left;
+    const cy = e.clientY - rect.top;
+
+    const x = (cx - imgX) / state.scale;
+    const y = (cy - imgY) / state.scale;
+
+    if (!isInsideImage(x, y)) {
+        cursorCoords.style.display = "none";
+        return;
+    }
+
+    cursorCoords.style.display = "block";
+
+    cursorCoords.style.left = (cx + 15) + "px";
+    cursorCoords.style.top = (cy + 15) + "px";
+
+    cursorCoords.textContent =
+        `X: ${x.toFixed(2)} | Y: ${y.toFixed(2)}`;
+});
+
+canvas.addEventListener("mouseleave", () => {
+    cursorCoords.style.display = "none";
 });
 
 window.addEventListener("mouseup", () => {
