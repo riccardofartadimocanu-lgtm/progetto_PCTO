@@ -17,6 +17,14 @@ const deleteBtn = document.getElementById("deleteBtn");
 
 const tbody = document.querySelector("#pointsTable tbody");
 
+const pointModal = document.getElementById("pointModal");
+const xmInput = document.getElementById("xmInput");
+const ymInput = document.getElementById("ymInput");
+const savePointBtn = document.getElementById("savePointBtn");
+const cancelPointBtn = document.getElementById("cancelPointBtn");
+
+let pendingPoint = null;
+
 /* =========================
    STATE
 ========================= */
@@ -149,11 +157,13 @@ canvas.addEventListener("click", (e) => {
 
     if (!isInsideImage(x, y)) return;
 
-    state.points.push({ x, y });
+    pendingPoint = { x, y };
 
-    render();
+    xmInput.value = "";
+    ymInput.value = "";
+
+    pointModal.classList.remove("hidden");
 });
-
 function isInsideImage(x, y) {
     return (
         x >= 0 &&
@@ -222,9 +232,11 @@ function renderTable() {
         const row = document.createElement("tr");
 
         row.innerHTML = `
-            <td>${p.x.toFixed(2)}</td>
-            <td>${p.y.toFixed(2)}</td>
-        `;
+    <td>${p.x.toFixed(2)}</td>
+    <td>${p.y.toFixed(2)}</td>
+    <td>${p.xm ?? ""}</td>
+    <td>${p.ym ?? ""}</td>
+`;
 
         row.addEventListener("mouseenter", () => {
             hoverIndex = i;
@@ -346,3 +358,23 @@ function drawOnlyCanvas() {
 
     renderDebug();
 }
+savePointBtn.addEventListener("click", () => {
+    if (!pendingPoint) return;
+
+    state.points.push({
+        x: pendingPoint.x,
+        y: pendingPoint.y,
+        xm: Number(xmInput.value),
+        ym: Number(ymInput.value)
+    });
+
+    pendingPoint = null;
+
+    pointModal.classList.add("hidden");
+
+    render();
+});
+cancelPointBtn.addEventListener("click", () => {
+    pendingPoint = null;
+    pointModal.classList.add("hidden");
+});
