@@ -397,11 +397,14 @@ savePointBtn.addEventListener("click", () => {
     const xm = xmInput.value.trim();
     const ym = ymInput.value.trim();
 
-    if (xm === "" || ym === "" || xm <= 0 || ym <= 0) {
-        alert("Inserisci sia Xm che Ym");
+    if (xm === "" || ym === "" ) {
+        showError("Inserisci sia Xm che Ym");
         return;
     }
-
+    if (Number(xm) <= 0 || Number(ym) <= 0) {
+        showError("Inserisci valori positivi e maggiori di 0 per Xm e Ym");
+        return;
+    }
     state.points.push({
         x: pendingPoint.x,
         y: pendingPoint.y,
@@ -418,3 +421,10 @@ cancelPointBtn.addEventListener("click", () => {
     pendingPoint = null;
     pointModal.classList.add("hidden");
 });
+function showError(msg) {
+    const el = document.getElementById("errorPopup");
+    el.textContent = msg;
+    el.classList.remove("hidden");
+    clearTimeout(el._timeout);
+    el._timeout = setTimeout(() => el.classList.add("hidden"), 3000)
+};
