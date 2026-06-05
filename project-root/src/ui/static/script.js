@@ -408,17 +408,21 @@ saveBtn.onclick = () => {
     offscreen.width  = state.image.width;
     offscreen.height = state.image.height;
     offscreen.getContext("2d").drawImage(state.image, 0, 0);
+
+    const idImmagine = document.getElementById("idImmagine").value.trim();
+    const idSetup = document.getElementById("idSetup").value.trim();
  
     const saveData = {
         version:     "1.0",
         savedAt:     new Date().toISOString(),
-        id_immagine: document.getElementById("idImmagine").value.trim() || "",
-        id_setup:    document.getElementById("idSetup").value.trim()    || "",
+        id_immagine: idImmagine,
+        id_setup:    idSetup,
         imageBase64: offscreen.toDataURL("image/png"),
         points:      state.points
     };
  
-    downloadJSON(saveData, "save.json");
+    const fileName = `img_${idImmagine}_setup_${idSetup}.json`;
+    downloadJSON(saveData, fileName);
  
     state.saved = true;
     setEditMode(false);
