@@ -54,7 +54,9 @@ let pan = {
 let selectedIndex = null;
 let hoverIndex    = null;
 let pendingPoint  = null;
- 
+let dragPointIndex = null;
+let isDraggingPoint = false;
+let pointWasMoved = false;
 /* =====================================================
    LOCK
 ===================================================== */
@@ -206,6 +208,11 @@ function drawOnlyCanvas() {
    CLICK → ADD POINT
 ===================================================== */
 canvas.addEventListener("click", (e) => {
+    if (dragPointIndex !== null) return;
+    if (pointWasMoved) {
+    pointWasMoved = false;
+    return;
+}
     if (!state.loaded || !state.edit || isLocked()) return;
  
     const rect = canvas.getBoundingClientRect();
@@ -231,7 +238,22 @@ function isInsideImage(x, y) {
         y <= state.image.height
     );
 }
- 
+function getPointAt(canvasX, canvasY) {
+    for (let i = state.points.length - 1; i >= 0; i--) {
+        const p = state.points[i];
+
+        const px = imgX + p.x * state.scale;
+        const py = imgY + p.y * state.scale;
+
+        const dist = Math.hypot(canvasX - px, canvasY - py);
+
+        if (dist < 10) {
+            return i;
+        }
+    }
+
+    return null;
+}
 /* =====================================================
    ZOOM
 ===================================================== */
@@ -264,12 +286,31 @@ function clampPan() {
 }
  
 canvas.addEventListener("mousedown", (e) => {
-    if (e.button !== 2) return;
+
     if (!state.loaded || !state.edit || isLocked()) return;
- 
-    pan.active = true;
-    pan.startX = e.clientX;
-    pan.startY = e.clientY;
+
+    const rect = canvas.getBoundingClientRect();
+    const cx = e.clientX - rect.left;
+    const cy = e.clientY - rect.top;
+
+    // Tasto sinistro = sposta punto
+    if (e.button === 0) {
+
+        const pointIndex = getPointAt(cx, cy);
+
+        if (pointIndex !== null) {
+            dragPointIndex = pointIndex;
+            isDraggingPoint = true;
+            return;
+        }
+    }
+
+    // Tasto destro = pan
+    if (e.button === 2) {
+        pan.active = true;
+        pan.startX = e.clientX;
+        pan.startY = e.clientY;
+    }
 });
  
 canvas.addEventListener("mousemove", (e) => {
@@ -278,7 +319,18 @@ canvas.addEventListener("mousemove", (e) => {
     const cy   = e.clientY - rect.top;
     const x    = (cx - imgX) / state.scale;
     const y    = (cy - imgY) / state.scale;
- 
+ if (isDraggingPoint && dragPointIndex !== null) {
+
+    if (isInsideImage(x, y)) {
+
+        state.points[dragPointIndex].x = x;
+        state.points[dragPointIndex].y = y;
+        pointWasMoved = true;
+        render();
+    }
+
+    return;
+}
     // Pan logic
     if (pan.active && state.edit && !isLocked()) {
         pan.offsetX += e.clientX - pan.startX;
@@ -309,7 +361,11 @@ canvas.addEventListener("mouseleave", () => {
 });
  
 window.addEventListener("mouseup", () => {
+
     pan.active = false;
+
+    isDraggingPoint = false;
+    dragPointIndex = null;
 });
  
 canvas.addEventListener("contextmenu", (e) => e.preventDefault());
