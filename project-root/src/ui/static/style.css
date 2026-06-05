@@ -253,10 +253,12 @@ tbody tr:hover {
 ===================================================== */
 #workspace {
     position: absolute;
+
     left: 290px;
     right: 0;
     top: 0;
     bottom: 0;
+
     background: #000;
     overflow: hidden;
 }
@@ -272,17 +274,28 @@ canvas {
 ===================================================== */
 #debug {
     position: absolute;
+
     top: 10px;
     right: 10px;
+
     background: rgba(0,0,0,0.75);
+
     color: #00ff88;
+
     padding: 10px 12px;
+
     font-size: 11px;
+
     font-family: monospace;
+
     border-radius: 8px;
+
     white-space: pre;
+
     border: 1px solid #1a1a1a;
+
     pointer-events: none;
+
     line-height: 1.6;
 }
 
@@ -416,7 +429,7 @@ canvas {
 }
 
 /* =====================================================
-   ERROR POPUP (nel modal nuovo punto)
+   ERROR POPUP
 ===================================================== */
 .error-popup {
     margin-top: 12px;
