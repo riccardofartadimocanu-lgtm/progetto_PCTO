@@ -10,6 +10,10 @@ L’applicazione consente all’utente di:
 * effettuare zoom avanti e indietro sull’immagine;
 * spostarsi all’interno dell’immagine tramite funzione di pan;
 * inserire punti direttamente sull’immagine;
+* visualizzare le coordinate dei punti inseriti;
+* eliminare punti non ancora salvati;
+* esportare i punti in formato JSON;
+* caricare punti precedentemente salvati tramite file JSON;
 * salvare i punti selezionati per utilizzi successivi.
 
 I punti salvati rappresentano coordinate in pixel che verranno utilizzate successivamente per il calcolo di coordinate reali.
@@ -30,7 +34,7 @@ Per il corretto funzionamento dell’applicazione è necessario:
 
 ## 1. Installazione dipendenze
 
-Aprire il terminale nella cartella del progetto ed eseguire:
+Aprire il terminale nella cartella `project-root` ed eseguire:
 
 ```bash
 pip install -r requirements.txt
@@ -43,7 +47,13 @@ pip install -r requirements.txt
 Eseguire:
 
 ```bash
-python/py main.py
+python main.py
+```
+
+oppure
+
+```bash
+py main.py
 ```
 
 Successivamente aprire il browser all’indirizzo:
@@ -58,13 +68,15 @@ http://127.0.0.1:5000
 
 ## Caricamento immagine
 
-Il pulsante “Carica immagine” permette di selezionare un’immagine tramite il file explorer del sistema operativo.
+Il pulsante **Carica immagine** permette di selezionare un’immagine tramite il file explorer del sistema operativo.
+
+Una volta caricata, l’immagine viene visualizzata all’interno dell’area di lavoro.
 
 ---
 
 ## Modalità Edit
 
-Il pulsante “Edit” abilita:
+Il pulsante **Edit** abilita:
 
 * zoom dell’immagine;
 * spostamento (pan) tramite tasto destro del mouse;
@@ -85,7 +97,20 @@ Quando la modalità Edit è attiva è possibile:
 * aggiungere punti;
 * visualizzare le coordinate dei punti inseriti.
 
-Le coordinate vengono salvate in pixel relativi all’immagine originale e visualizzate nella tabella accanto.
+Le coordinate vengono salvate in pixel relativi all’immagine originale e visualizzate nella tabella laterale.
+
+---
+
+## Tabella Punti
+
+La tabella dei punti:
+
+* mostra le coordinate dei punti inseriti;
+* aggiorna automaticamente il numero di punti presenti;
+* permette la cancellazione dei punti prima del salvataggio;
+* mantiene i dati in sola lettura dopo il salvataggio.
+
+Una volta salvati, i punti non possono più essere modificati o eliminati.
 
 ---
 
@@ -110,7 +135,7 @@ Il pan è disponibile solamente durante la modalità Edit.
 
 ## Salvataggio
 
-Il pulsante “Save”:
+Il pulsante **Save**:
 
 * salva i punti inseriti;
 * blocca ulteriori modifiche;
@@ -120,14 +145,40 @@ Il pulsante Save non funziona se non sono presenti punti.
 
 ---
 
-## Tabella Punti
+## Esportazione JSON
 
-La tabella dei punti:
+Il pulsante **Export JSON** permette di esportare i punti inseriti in un file JSON.
 
-* mostra le coorindate in pixel;
-* permette la cancellazione del punto cliccandoci sopra;
+Il file contiene:
 
-La tabella dei punti non permette l'elminazione dei punti una volta salvato.
+* coordinate dei punti;
+* identificativi dei punti;
+* informazioni necessarie per il successivo caricamento e utilizzo dei dati.
+
+L’esportazione consente di conservare il lavoro svolto e trasferirlo tra diverse sessioni dell’applicazione.
+
+---
+
+## Importazione JSON
+
+Il pulsante **Load JSON** permette di caricare un file JSON precedentemente esportato.
+
+Durante il caricamento:
+
+* vengono ricostruiti i punti salvati;
+* vengono ripristinate le coordinate associate;
+* la tabella dei punti viene aggiornata automaticamente.
+
+---
+
+## Gestione dati
+
+I dati dei punti vengono gestiti tramite strutture JSON che consentono:
+
+* facile esportazione;
+* facile importazione;
+* compatibilità tra frontend e backend;
+* estensibilità per future implementazioni.
 
 ---
 
@@ -150,7 +201,45 @@ La tabella dei punti non permette l'elminazione dei punti una volta salvato.
 
 ## Formati dati
 
-* JSON per il salvataggio dei dati e delle coordinate dei punti
+* JSON per il salvataggio e il caricamento dei punti
+* JSON per la comunicazione tra frontend e backend
+
+---
+
+# Architettura del progetto
+
+L'applicazione segue una struttura modulare composta da:
+
+## Frontend
+
+Responsabile della gestione dell'interfaccia utente:
+
+* caricamento immagini;
+* gestione canvas;
+* zoom;
+* pan;
+* inserimento punti;
+* esportazione/importazione JSON.
+
+## Backend
+
+Responsabile della gestione dei dati e della logica applicativa:
+
+* ricezione delle richieste dal frontend;
+* elaborazione dei dati;
+* gestione della pipeline;
+* salvataggio e caricamento delle informazioni.
+
+## Pipeline
+
+La pipeline rappresenta il componente incaricato di coordinare il flusso dei dati all'interno dell'applicazione.
+
+Le sue responsabilità includono:
+
+* gestione dei punti inseriti;
+* preparazione dei dati per il salvataggio;
+* caricamento dei dati esportati;
+* integrazione futura con sistemi di analisi automatica.
 
 ---
 
@@ -163,28 +252,38 @@ progetto_PCTO/
 │   ├── main.py
 │   ├── requirements.txt
 │   ├── README.md
-│
-├── src/
-│   ├── core/
-│   │   ├── pipeline.py
 │   │
-│   ├── ui/
-│       ├── static/
-│       │   ├── script.js
-│       │   ├── style.css
+│   └── src/
+│       ├── core/
+│       │   ├── __init__.py
+│       │   └── pipeline.py
 │       │
-│       ├── templates/
-│           ├── pagina.html
+│       └── ui/
+│           ├── static/
+│           │   ├── script.js
+│           │   └── style.css
+│           │
+│           └── templates/
+│               └── pagina.html
 ```
 
 ---
 
-# Note
+# Sviluppi futuri
 
-L’applicazione è attualmente in fase di sviluppo e rappresenta la base per future implementazioni riguardanti:
+L’applicazione rappresenta una base per future implementazioni riguardanti:
 
 * conversione coordinate pixel → coordinate reali;
 * gestione avanzata dei dataset;
 * salvataggio persistente dei progetti;
 * elaborazione automatica delle immagini;
-* integrazione con pipeline di analisi.
+* introduzione di detector dedicati all'analisi delle immagini;
+* integrazione con pipeline di elaborazione avanzata;
+* validazione automatica dei punti inseriti;
+* esportazione in formati aggiuntivi.
+
+---
+
+# Note
+
+L'applicazione è attualmente in fase di sviluppo. La struttura adottata consente l'estensione delle funzionalità senza modifiche sostanziali all'architettura esistente, favorendo la separazione tra interfaccia grafica, logica applicativa e gestione dei dati.
