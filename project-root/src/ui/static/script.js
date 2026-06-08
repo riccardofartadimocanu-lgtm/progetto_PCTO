@@ -267,8 +267,26 @@ canvas.addEventListener("wheel", (e) => {
 
     e.preventDefault();
 
-    state.scale *= (e.deltaY < 0) ? 1.1 : 0.9;
-    state.scale  = Math.max(0.1, Math.min(state.scale, 10));
+    const rect      = canvas.getBoundingClientRect();
+    const mouseX    = e.clientX - rect.left;
+    const mouseY    = e.clientY - rect.top;
+
+    // Posizione del cursore nello spazio immagine PRIMA dello zoom
+    const imgPosX   = (mouseX - imgX) / state.scale;
+    const imgPosY   = (mouseY - imgY) / state.scale;
+
+    const factor    = (e.deltaY < 0) ? 1.1 : 0.9;
+    state.scale    *= factor;
+    state.scale     = Math.max(0.1, Math.min(state.scale, 10));
+
+    // Ricalcola offset in modo che il punto sotto il cursore rimanga fermo
+    const newW      = state.image.width  * state.scale;
+    const newH      = state.image.height * state.scale;
+    const baseX     = (canvas.width  - newW) / 2;
+    const baseY     = (canvas.height - newH) / 2;
+
+    pan.offsetX     = mouseX - baseX - imgPosX * state.scale;
+    pan.offsetY     = mouseY - baseY - imgPosY * state.scale;
 
     clampPan();
     render();
