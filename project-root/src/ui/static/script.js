@@ -303,13 +303,11 @@ canvas.addEventListener("mousedown", (e) => {
         if (pointIndex !== null) {
             dragPointIndex = pointIndex;
             isDraggingPoint = true;
-            // Salva posizione corrente in history per undo
             history.push({
                 index: pointIndex,
                 x: state.points[pointIndex].x,
                 y: state.points[pointIndex].y
             });
-            console.log(`📌 History salvata: Punto ${pointIndex + 1} a (${state.points[pointIndex].x.toFixed(2)}, ${state.points[pointIndex].y.toFixed(2)}). History length: ${history.length}`);
             return;
         }
     }
@@ -382,30 +380,26 @@ canvas.addEventListener("contextmenu", (e) => e.preventDefault());
 ===================================================== */
 window.addEventListener("keydown", (e) => {
     const isCtrlZ = (e.ctrlKey || e.metaKey) && (e.key === "z" || e.key === "Z");
-    
+
     if (isCtrlZ) {
         e.preventDefault();
-        
+
         if (history.length > 0) {
             const lastAction = history.pop();
-            
-            // Verifica che il punto esista e che l'indice sia valido
-            if (lastAction && 
-                lastAction.index !== null && 
+
+            if (lastAction &&
+                lastAction.index !== null &&
                 lastAction.index !== undefined &&
                 state.points[lastAction.index]) {
-                
+
                 state.points[lastAction.index].x = lastAction.x;
                 state.points[lastAction.index].y = lastAction.y;
-                
-                console.log(`✅ UNDO: Punto ${lastAction.index + 1} ripristinato a (${lastAction.x.toFixed(2)}, ${lastAction.y.toFixed(2)})`);
+
                 render();
             }
-        } else {
-            console.log("⚠️ History vuota, niente da fare undo");
         }
     }
-}, true); // true = capture phase per catturare l'evento prima
+}, true);
 
 /* =====================================================
    EDIT MODE BUTTON
@@ -433,9 +427,9 @@ clearBtn.onclick = () => {
 };
 
 /* =====================================================
-   SAVE  →  save.json
+   SAVE → /api/save (Python) + download locale
 ===================================================== */
-saveBtn.onclick = () => {
+saveBtn.onclick = async () => {
     if (!state.loaded) {
         alert("Nessuna immagine caricata.");
         return;
@@ -446,20 +440,28 @@ saveBtn.onclick = () => {
     offscreen.height = state.image.height;
     offscreen.getContext("2d").drawImage(state.image, 0, 0);
 
-    const idImmagine = document.getElementById("idImmagine").value.trim();
-    const idSetup = document.getElementById("idSetup").value.trim();
+    const id_immagine = document.getElementById("idImmagine").value.trim();
+    const id_setup    = document.getElementById("idSetup").value.trim();
 
     const saveData = {
         version:     "1.0",
         savedAt:     new Date().toISOString(),
-        id_immagine: idImmagine,
-        id_setup:    idSetup,
+        id_immagine,
+        id_setup,
         imageBase64: offscreen.toDataURL("image/png"),
         points:      state.points
     };
 
-    const fileName = `img_${idImmagine}_setup_${idSetup}.json`;
-    downloadJSON(saveData, fileName);
+    // Invia a Python
+    await fetch("/api/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(saveData)
+    });
+
+    // Download locale
+    const fname = `img_${id_immagine}_setup_${id_setup}.json`;
+    downloadJSON(saveData, fname);
 
     state.saved = true;
     setEditMode(false);
@@ -467,67 +469,70 @@ saveBtn.onclick = () => {
 };
 
 /* =====================================================
-   LOAD SAVE
+   LOAD SAVE → /api/load (Python valida)
 ===================================================== */
 loadSaveBtn.onclick = () => {
     const input    = document.createElement("input");
     input.type     = "file";
     input.accept   = ".json,application/json";
 
-    input.onchange = (e) => {
+    input.onchange = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
-        const reader = new FileReader();
+        let data;
+        try {
+            const text = await file.text();
+            data = JSON.parse(text);
+        } catch {
+            alert("JSON non valido.");
+            return;
+        }
 
-        reader.onload = (event) => {
-            try {
-                const data = JSON.parse(event.target.result);
+        // Validazione lato Python
+        const res = await fetch("/api/load", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+        });
 
-                if (!data.imageBase64 || !Array.isArray(data.points)) {
-                    alert("File non valido o corrotto.");
-                    return;
-                }
+        if (!res.ok) {
+            alert("File non valido o corrotto.");
+            return;
+        }
 
-                if (data.id_immagine) document.getElementById("idImmagine").value = data.id_immagine;
-                if (data.id_setup)    document.getElementById("idSetup").value    = data.id_setup;
+        const { data: validated } = await res.json();
 
-                state.image     = new Image();
-                state.image.src = data.imageBase64;
+        if (validated.id_immagine) document.getElementById("idImmagine").value = validated.id_immagine;
+        if (validated.id_setup)    document.getElementById("idSetup").value    = validated.id_setup;
 
-                state.image.onload = () => {
-                    state.loaded = true;
-                    state.scale  = 1;
-                    state.points = data.points;
-                    state.saved  = false;
-                    history = [];
+        state.image     = new Image();
+        state.image.src = validated.imageBase64;
 
-                    pan.offsetX = 0;
-                    pan.offsetY = 0;
+        state.image.onload = () => {
+            state.loaded  = true;
+            state.scale   = 1;
+            state.points  = validated.points;
+            state.saved   = false;
+            history       = [];
+            pan.offsetX   = 0;
+            pan.offsetY   = 0;
+            selectedIndex = null;
+            hoverIndex    = null;
 
-                    selectedIndex = null;
-                    hoverIndex    = null;
-
-                    setEditMode(false);
-                    setLockedUI(false);
-                    render();
-                };
-
-            } catch (err) {
-                alert("Errore nella lettura del file: " + err.message);
-            }
+            setEditMode(false);
+            setLockedUI(false);
+            render();
         };
-
-        reader.readAsText(file);
     };
 
     input.click();
 };
 
 /* =====================================================
-   EXPORT JSON
+   EXPORT JSON → /api/export (Python elabora)
 ===================================================== */
-exportBtn.onclick = () => {
+exportBtn.onclick = async () => {
     if (!state.loaded) {
         alert("Nessuna immagine caricata.");
         return;
@@ -537,58 +542,144 @@ exportBtn.onclick = () => {
         return;
     }
 
-    const idImmagine = document.getElementById("idImmagine").value.trim() || "IMG-UNKNOWN";
-    const idSetup    = document.getElementById("idSetup").value.trim()    || "SETUP-UNKNOWN";
+    const id_immagine = document.getElementById("idImmagine").value.trim() || "IMG-UNKNOWN";
+    const id_setup    = document.getElementById("idSetup").value.trim()    || "SETUP-UNKNOWN";
 
-    const records = state.points.map((p, i) => buildPointRecord(p, i, idImmagine, idSetup));
+    const res = await fetch("/api/export", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            points:       state.points,
+            id_immagine,
+            id_setup,
+            image_width:  state.image.width,
+            image_height: state.image.height
+        })
+    });
 
-    const exportData = {
-        export_metadata: {
-            exported_at:    new Date().toISOString(),
-            id_immagine:    idImmagine,
-            id_setup:       idSetup,
-            image_size: {
-                width:  state.image.width,
-                height: state.image.height
-            },
-            total_points:   records.length,
-            points_ok:      records.filter(r => r.stato_elaborazione === "completo").length,
-            points_warning: records.filter(r => r.stato_elaborazione === "warning").length,
-            points_error:   records.filter(r => r.stato_elaborazione === "incompleto").length
-        },
-        points: records
-    };
-
-    downloadJSON(exportData, `export_${idImmagine}_${idSetup}.json`);
+    const blob = await res.blob();
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href     = url;
+    a.download = `export_${id_immagine}_${id_setup}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
 };
 
 /* =====================================================
-   POINT RECORD BUILDER
+   MODAL DELETE
 ===================================================== */
-function buildPointRecord(p, i, idImmagine, idSetup) {
-    const warnings = resolveWarnings(p, i);
-    const stato    = resolveStatus(p, warnings);
+cancelBtn.onclick = () => {
+    modal.classList.add("hidden");
+    selectedIndex = null;
+    drawOnlyCanvas();
+};
 
-    return {
-        id:          i + 1,
-        id_immagine: idImmagine,
-        id_setup:    idSetup,
+deleteBtn.onclick = () => {
+    if (selectedIndex !== null && !isLocked()) {
+        state.points.splice(selectedIndex, 1);
+        history = [];
+        selectedIndex = null;
+        render();
+    }
+    modal.classList.add("hidden");
+};
 
-        posizione_pixel: {
-            x: parseFloat(p.x.toFixed(4)),
-            y: parseFloat(p.y.toFixed(4))
-        },
+/* =====================================================
+   MODAL NEW/EDIT POINT
+===================================================== */
+savePointBtn.addEventListener("click", () => {
+    const xm = xmInput.value.trim();
+    const ym = ymInput.value.trim();
 
-        posizione_reale_misurata: {
-            xm: p.xm ?? null,
-            ym: p.ym ?? null
-        },
+    if (xm === "" || ym === "") {
+        showError("Inserisci sia Xm che Ym.");
+        return;
+    }
+    if (Number(xm) <= 0 || Number(ym) <= 0) {
+        showError("Xm e Ym devono essere maggiori di 0.");
+        return;
+    }
 
-        posizione_reale_stimata: resolveEstimatedPosition(p),
+    if (editingPointIndex !== null) {
+        state.points[editingPointIndex].xm = Number(xm);
+        state.points[editingPointIndex].ym = Number(ym);
+        editingPointIndex = null;
+    } else if (pendingPoint) {
+        state.points.push({
+            x:  pendingPoint.x,
+            y:  pendingPoint.y,
+            xm: Number(xm),
+            ym: Number(ym)
+        });
+        pendingPoint = null;
+    }
 
-        warning:            warnings,
-        stato_elaborazione: stato
-    };
+    pointModal.classList.add("hidden");
+    render();
+});
+
+cancelPointBtn.addEventListener("click", () => {
+    pendingPoint = null;
+    editingPointIndex = null;
+    pointModal.classList.add("hidden");
+});
+
+/* =====================================================
+   TABLE
+===================================================== */
+function renderTable() {
+    tbody.innerHTML = "";
+
+    state.points.forEach((p, i) => {
+        const row    = document.createElement("tr");
+        const status = resolveStatus(p);
+
+        const badgeClass = status === "completo"   ? "badge-ok"
+                         : status === "warning"    ? "badge-warning"
+                         :                           "badge-error";
+
+        const badgeLabel = status === "completo"   ? "OK"
+                         : status === "warning"    ? "WARN"
+                         :                           "ERR";
+
+        row.innerHTML = `
+            <td>${i + 1}</td>
+            <td>${p.x.toFixed(1)}</td>
+            <td>${p.y.toFixed(1)}</td>
+            <td>${p.xm ?? "—"}</td>
+            <td>${p.ym ?? "—"}</td>
+            <td><span class="badge ${badgeClass}">${badgeLabel}</span></td>
+        `;
+
+        row.addEventListener("mouseenter", () => {
+            hoverIndex = i;
+            drawOnlyCanvas();
+        });
+
+        row.addEventListener("mouseleave", () => {
+            hoverIndex = null;
+            drawOnlyCanvas();
+        });
+
+        row.addEventListener("click", () => {
+            selectedIndex    = i;
+            hoverIndex       = null;
+            modalText.textContent = `Punto #${i + 1} — X: ${p.x.toFixed(2)}, Y: ${p.y.toFixed(2)}`;
+            modal.classList.remove("hidden");
+            drawOnlyCanvas();
+        });
+
+        row.addEventListener("dblclick", () => {
+            editingPointIndex = i;
+            xmInput.value  = p.xm ?? "";
+            ymInput.value  = p.ym ?? "";
+            modal.classList.add("hidden");
+            pointModal.classList.remove("hidden");
+        });
+
+        tbody.appendChild(row);
+    });
 }
 
 /* =====================================================
@@ -601,14 +692,12 @@ function resolveWarnings(p, i) {
     if (p.xm == null || p.ym == null) {
         warnings.push("MISSING_REAL_COORDS: Xm o Ym non definiti");
     }
-
     if (p.xm != null && p.xm <= 0) {
         warnings.push("INVALID_XM: Xm deve essere > 0");
     }
     if (p.ym != null && p.ym <= 0) {
         warnings.push("INVALID_YM: Ym deve essere > 0");
     }
-
     if (
         p.x < EDGE_MARGIN ||
         p.y < EDGE_MARGIN ||
@@ -656,126 +745,6 @@ function resolveEstimatedPosition(p) {
         note:  "Stima lineare mock — sostituire con modello calibrato"
     };
 }
-
-/* =====================================================
-   TABLE
-===================================================== */
-function renderTable() {
-    tbody.innerHTML = "";
-
-    state.points.forEach((p, i) => {
-        const row    = document.createElement("tr");
-        const status = resolveStatus(p);
-
-        const badgeClass = status === "completo"   ? "badge-ok"
-                         : status === "warning"    ? "badge-warning"
-                         :                           "badge-error";
-
-        const badgeLabel = status === "completo"   ? "OK"
-                         : status === "warning"    ? "WARN"
-                         :                           "ERR";
-
-        row.innerHTML = `
-            <td>${i + 1}</td>
-            <td>${p.x.toFixed(1)}</td>
-            <td>${p.y.toFixed(1)}</td>
-            <td>${p.xm ?? "—"}</td>
-            <td>${p.ym ?? "—"}</td>
-            <td><span class="badge ${badgeClass}">${badgeLabel}</span></td>
-        `;
-
-        row.addEventListener("mouseenter", () => {
-            hoverIndex = i;
-            drawOnlyCanvas();
-        });
-
-        row.addEventListener("mouseleave", () => {
-            hoverIndex = null;
-            drawOnlyCanvas();
-        });
-
-        row.addEventListener("click", () => {
-            selectedIndex    = i;
-            hoverIndex       = null;
-            modalText.textContent = `Punto #${i + 1} — X: ${p.x.toFixed(2)}, Y: ${p.y.toFixed(2)}`;
-            modal.classList.remove("hidden");
-            drawOnlyCanvas();
-        });
-
-        // Double-click per editare Xm/Ym
-        row.addEventListener("dblclick", () => {
-            editingPointIndex = i;
-            xmInput.value  = p.xm ?? "";
-            ymInput.value  = p.ym ?? "";
-            modal.classList.add("hidden");
-            pointModal.classList.remove("hidden");
-        });
-
-        tbody.appendChild(row);
-    });
-}
-
-/* =====================================================
-   MODAL DELETE
-===================================================== */
-cancelBtn.onclick = () => {
-    modal.classList.add("hidden");
-    selectedIndex = null;
-    drawOnlyCanvas();
-};
-
-deleteBtn.onclick = () => {
-    if (selectedIndex !== null && !isLocked()) {
-        state.points.splice(selectedIndex, 1);
-        history = [];
-        selectedIndex = null;
-        render();
-    }
-    modal.classList.add("hidden");
-};
-
-/* =====================================================
-   MODAL NEW/EDIT POINT
-===================================================== */
-savePointBtn.addEventListener("click", () => {
-    const xm = xmInput.value.trim();
-    const ym = ymInput.value.trim();
-
-    if (xm === "" || ym === "") {
-        showError("Inserisci sia Xm che Ym.");
-        return;
-    }
-    if (Number(xm) <= 0 || Number(ym) <= 0) {
-        showError("Xm e Ym devono essere maggiori di 0.");
-        return;
-    }
-
-    // Se sta editando un punto esistente
-    if (editingPointIndex !== null) {
-        state.points[editingPointIndex].xm = Number(xm);
-        state.points[editingPointIndex].ym = Number(ym);
-        editingPointIndex = null;
-    } 
-    // Altrimenti crea un nuovo punto
-    else if (pendingPoint) {
-        state.points.push({
-            x:  pendingPoint.x,
-            y:  pendingPoint.y,
-            xm: Number(xm),
-            ym: Number(ym)
-        });
-        pendingPoint = null;
-    }
-
-    pointModal.classList.add("hidden");
-    render();
-});
-
-cancelPointBtn.addEventListener("click", () => {
-    pendingPoint = null;
-    editingPointIndex = null;
-    pointModal.classList.add("hidden");
-});
 
 /* =====================================================
    ERROR POPUP
