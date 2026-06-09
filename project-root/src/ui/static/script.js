@@ -361,7 +361,9 @@ canvas.addEventListener("mousemove", (e) => {
     cursorCoords.style.display = "block";
     cursorCoords.style.left    = (cx + 16) + "px";
     cursorCoords.style.top     = (cy + 16) + "px";
-    cursorCoords.textContent   = `X: ${x.toFixed(2)} | Y: ${y.toFixed(2)}`;
+   cursorCoords.textContent = isPixelMode
+    ? `X: ${Math.round(x)} | Y: ${Math.round(y)}`
+    : `X: ${x.toFixed(2)} | Y: ${y.toFixed(2)}`;
 });
 
 canvas.addEventListener("mouseleave", () => {
