@@ -28,7 +28,6 @@ const tbody = document.querySelector("#pointsTable tbody");
 const modeBtn = document.getElementById("modeBtn");
 
 editBtn.classList.add("edit-off");
-canvas.style.cursor = "none";
 
 /* =====================================================
    STATE
@@ -215,36 +214,7 @@ function drawOnlyCanvas() {
         ctx.fillText(`#${i + 1}`, px + size + 3, py - size);
     });
 
-    // Custom crosshair cursor — + piena
-    if (state.loaded) {
-        const cx  = mouseCanvasX;
-        const cy  = mouseCanvasY;
-        const arm = 12;
-
-        ctx.save();
-
-        // Ombra nera per contrasto su qualsiasi sfondo
-        ctx.strokeStyle = "#000000";
-        ctx.lineWidth   = 3;
-        ctx.beginPath();
-        ctx.moveTo(cx - arm, cy);
-        ctx.lineTo(cx + arm, cy);
-        ctx.moveTo(cx, cy - arm);
-        ctx.lineTo(cx, cy + arm);
-        ctx.stroke();
-
-        // + bianca sopra
-        ctx.strokeStyle = "#ffffff";
-        ctx.lineWidth   = 1.5;
-        ctx.beginPath();
-        ctx.moveTo(cx - arm, cy);
-        ctx.lineTo(cx + arm, cy);
-        ctx.moveTo(cx, cy - arm);
-        ctx.lineTo(cx, cy + arm);
-        ctx.stroke();
-
-        ctx.restore();
-    }
+   
 
     renderDebug();
 }
