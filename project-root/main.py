@@ -12,7 +12,7 @@ app = Flask(__name__,
 def home():
     return render_template("pagina.html")
 
-# ── SAVE ─────────────────────────────────────────────────────
+#  SAVE 
 @app.route("/api/save", methods=["POST"])
 def api_save():
     data = request.get_json()
@@ -97,7 +97,7 @@ def api_export():
     return send_file(buf, mimetype="application/json",
                      as_attachment=True, download_name=fname)
 
-# ── LOAD SAVE ─────────────────────────────────────────────────
+# ── LOAD SAVE 
 @app.route("/api/load", methods=["POST"])
 def api_load():
     data = request.get_json()

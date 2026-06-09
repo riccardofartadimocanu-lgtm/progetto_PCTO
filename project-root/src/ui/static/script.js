@@ -25,7 +25,6 @@ const savePointBtn = document.getElementById("savePointBtn");
 const cancelPointBtn = document.getElementById("cancelPointBtn");
 
 const tbody = document.querySelector("#pointsTable tbody");
-const modeBtn = document.getElementById("modeBtn");
 
 editBtn.classList.add("edit-off");
 
@@ -41,9 +40,6 @@ let state = {
     saved:  false
 };
 
-// inputMode: "pixel" = coordinate pixel intere | "real" = unità reali con virgola
-let inputMode = "pixel";
-
 let imgX = 0;
 let imgY = 0;
 
@@ -54,9 +50,6 @@ let pan = {
     offsetX: 0,
     offsetY: 0
 };
-
-let mouseCanvasX = 0;
-let mouseCanvasY = 0;
 
 let selectedIndex = null;
 let hoverIndex    = null;
@@ -214,8 +207,6 @@ function drawOnlyCanvas() {
         ctx.fillText(`#${i + 1}`, px + size + 3, py - size);
     });
 
-   
-
     renderDebug();
 }
 
@@ -235,14 +226,8 @@ canvas.addEventListener("click", (e) => {
     const cx   = e.clientX - rect.left;
     const cy   = e.clientY - rect.top;
 
-    let x = (cx - imgX) / state.scale;
-    let y = (cy - imgY) / state.scale;
-
-    // In modalità pixel snap all'intero più vicino
-    if (inputMode === "pixel") {
-        x = Math.round(x);
-        y = Math.round(y);
-    }
+    const x = (cx - imgX) / state.scale;
+    const y = (cy - imgY) / state.scale;
 
     if (!isInsideImage(x, y)) return;
 
@@ -282,26 +267,8 @@ canvas.addEventListener("wheel", (e) => {
 
     e.preventDefault();
 
-    const rect      = canvas.getBoundingClientRect();
-    const mouseX    = e.clientX - rect.left;
-    const mouseY    = e.clientY - rect.top;
-
-    // Posizione del cursore nello spazio immagine PRIMA dello zoom
-    const imgPosX   = (mouseX - imgX) / state.scale;
-    const imgPosY   = (mouseY - imgY) / state.scale;
-
-    const factor    = (e.deltaY < 0) ? 1.1 : 0.9;
-    state.scale    *= factor;
-    state.scale     = Math.max(0.1, Math.min(state.scale, 10));
-
-    // Ricalcola offset in modo che il punto sotto il cursore rimanga fermo
-    const newW      = state.image.width  * state.scale;
-    const newH      = state.image.height * state.scale;
-    const baseX     = (canvas.width  - newW) / 2;
-    const baseY     = (canvas.height - newH) / 2;
-
-    pan.offsetX     = mouseX - baseX - imgPosX * state.scale;
-    pan.offsetY     = mouseY - baseY - imgPosY * state.scale;
+    state.scale *= (e.deltaY < 0) ? 1.1 : 0.9;
+    state.scale  = Math.max(0.1, Math.min(state.scale, 10));
 
     clampPan();
     render();
@@ -336,11 +303,13 @@ canvas.addEventListener("mousedown", (e) => {
         if (pointIndex !== null) {
             dragPointIndex = pointIndex;
             isDraggingPoint = true;
+            // Salva posizione corrente in history per undo
             history.push({
                 index: pointIndex,
                 x: state.points[pointIndex].x,
                 y: state.points[pointIndex].y
             });
+            console.log(`📌 History salvata: Punto ${pointIndex + 1} a (${state.points[pointIndex].x.toFixed(2)}, ${state.points[pointIndex].y.toFixed(2)}). History length: ${history.length}`);
             return;
         }
     }
@@ -360,18 +329,14 @@ canvas.addEventListener("mousemove", (e) => {
     const x    = (cx - imgX) / state.scale;
     const y    = (cy - imgY) / state.scale;
 
-    mouseCanvasX = cx;
-    mouseCanvasY = cy;
-
     // Drag punto
     if (isDraggingPoint && dragPointIndex !== null) {
         if (isInsideImage(x, y)) {
-            state.points[dragPointIndex].x = inputMode === "pixel" ? Math.round(x) : x;
-            state.points[dragPointIndex].y = inputMode === "pixel" ? Math.round(y) : y;
+            state.points[dragPointIndex].x = isPixelMode ? Math.round(x) : x;
+            state.points[dragPointIndex].y = isPixelMode ? Math.round(y) : y;
             pointWasMoved = true;
             render();
         }
-        drawOnlyCanvas(); // aggiorna crosshair anche durante drag
         return;
     }
 
@@ -385,9 +350,6 @@ canvas.addEventListener("mousemove", (e) => {
 
         clampPan();
         render();
-    } else {
-        // Ridisegna solo il canvas per aggiornare posizione crosshair
-        drawOnlyCanvas();
     }
 
     // Cursor coords overlay
@@ -399,20 +361,12 @@ canvas.addEventListener("mousemove", (e) => {
     cursorCoords.style.display = "block";
     cursorCoords.style.left    = (cx + 16) + "px";
     cursorCoords.style.top     = (cy + 16) + "px";
-    if (inputMode === "pixel") {
-        cursorCoords.textContent = `X: ${Math.round(x)} | Y: ${Math.round(y)}`;
-    } else {
-        // mostra con 3 decimali e virgola (es. 5,320)
-        cursorCoords.textContent = `X: ${x.toFixed(3).replace(".", ",")} | Y: ${y.toFixed(3).replace(".", ",")}`;
-    }
+    cursorCoords.textContent   = `X: ${x.toFixed(2)} | Y: ${y.toFixed(2)}`;
 });
 
 canvas.addEventListener("mouseleave", () => {
     cursorCoords.style.display = "none";
-    pan.active   = false;
-    mouseCanvasX = -100;
-    mouseCanvasY = -100;
-    drawOnlyCanvas();
+    pan.active = false;
 });
 
 window.addEventListener("mouseup", () => {
@@ -428,26 +382,30 @@ canvas.addEventListener("contextmenu", (e) => e.preventDefault());
 ===================================================== */
 window.addEventListener("keydown", (e) => {
     const isCtrlZ = (e.ctrlKey || e.metaKey) && (e.key === "z" || e.key === "Z");
-
+    
     if (isCtrlZ) {
         e.preventDefault();
-
+        
         if (history.length > 0) {
             const lastAction = history.pop();
-
-            if (lastAction &&
-                lastAction.index !== null &&
+            
+            // Verifica che il punto esista e che l'indice sia valido
+            if (lastAction && 
+                lastAction.index !== null && 
                 lastAction.index !== undefined &&
                 state.points[lastAction.index]) {
-
+                
                 state.points[lastAction.index].x = lastAction.x;
                 state.points[lastAction.index].y = lastAction.y;
-
+                
+                console.log(`✅ UNDO: Punto ${lastAction.index + 1} ripristinato a (${lastAction.x.toFixed(2)}, ${lastAction.y.toFixed(2)})`);
                 render();
             }
+        } else {
+            console.log("⚠️ History vuota, niente da fare undo");
         }
     }
-}, true);
+}, true); // true = capture phase per catturare l'evento prima
 
 /* =====================================================
    EDIT MODE BUTTON
@@ -475,9 +433,9 @@ clearBtn.onclick = () => {
 };
 
 /* =====================================================
-   SAVE → /api/save (Python) + download locale
+   SAVE  →  save.json
 ===================================================== */
-saveBtn.onclick = async () => {
+saveBtn.onclick = () => {
     if (!state.loaded) {
         alert("Nessuna immagine caricata.");
         return;
@@ -488,28 +446,20 @@ saveBtn.onclick = async () => {
     offscreen.height = state.image.height;
     offscreen.getContext("2d").drawImage(state.image, 0, 0);
 
-    const id_immagine = document.getElementById("idImmagine").value.trim();
-    const id_setup    = document.getElementById("idSetup").value.trim();
+    const idImmagine = document.getElementById("idImmagine").value.trim();
+    const idSetup = document.getElementById("idSetup").value.trim();
 
     const saveData = {
         version:     "1.0",
         savedAt:     new Date().toISOString(),
-        id_immagine,
-        id_setup,
+        id_immagine: idImmagine,
+        id_setup:    idSetup,
         imageBase64: offscreen.toDataURL("image/png"),
         points:      state.points
     };
 
-    // Invia a Python
-    await fetch("/api/save", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(saveData)
-    });
-
-    // Download locale
-    const fname = `img_${id_immagine}_setup_${id_setup}.json`;
-    downloadJSON(saveData, fname);
+    const fileName = `img_${idImmagine}_setup_${idSetup}.json`;
+    downloadJSON(saveData, fileName);
 
     state.saved = true;
     setEditMode(false);
@@ -517,70 +467,67 @@ saveBtn.onclick = async () => {
 };
 
 /* =====================================================
-   LOAD SAVE → /api/load (Python valida)
+   LOAD SAVE
 ===================================================== */
 loadSaveBtn.onclick = () => {
     const input    = document.createElement("input");
     input.type     = "file";
     input.accept   = ".json,application/json";
 
-    input.onchange = async (e) => {
+    input.onchange = (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
-        let data;
-        try {
-            const text = await file.text();
-            data = JSON.parse(text);
-        } catch {
-            alert("JSON non valido.");
-            return;
-        }
+        const reader = new FileReader();
 
-        // Validazione lato Python
-        const res = await fetch("/api/load", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(data)
-        });
+        reader.onload = (event) => {
+            try {
+                const data = JSON.parse(event.target.result);
 
-        if (!res.ok) {
-            alert("File non valido o corrotto.");
-            return;
-        }
+                if (!data.imageBase64 || !Array.isArray(data.points)) {
+                    alert("File non valido o corrotto.");
+                    return;
+                }
 
-        const { data: validated } = await res.json();
+                if (data.id_immagine) document.getElementById("idImmagine").value = data.id_immagine;
+                if (data.id_setup)    document.getElementById("idSetup").value    = data.id_setup;
 
-        if (validated.id_immagine) document.getElementById("idImmagine").value = validated.id_immagine;
-        if (validated.id_setup)    document.getElementById("idSetup").value    = validated.id_setup;
+                state.image     = new Image();
+                state.image.src = data.imageBase64;
 
-        state.image     = new Image();
-        state.image.src = validated.imageBase64;
+                state.image.onload = () => {
+                    state.loaded = true;
+                    state.scale  = 1;
+                    state.points = data.points;
+                    state.saved  = false;
+                    history = [];
 
-        state.image.onload = () => {
-            state.loaded  = true;
-            state.scale   = 1;
-            state.points  = validated.points;
-            state.saved   = false;
-            history       = [];
-            pan.offsetX   = 0;
-            pan.offsetY   = 0;
-            selectedIndex = null;
-            hoverIndex    = null;
+                    pan.offsetX = 0;
+                    pan.offsetY = 0;
 
-            setEditMode(false);
-            setLockedUI(false);
-            render();
+                    selectedIndex = null;
+                    hoverIndex    = null;
+
+                    setEditMode(false);
+                    setLockedUI(false);
+                    render();
+                };
+
+            } catch (err) {
+                alert("Errore nella lettura del file: " + err.message);
+            }
         };
+
+        reader.readAsText(file);
     };
 
     input.click();
 };
 
 /* =====================================================
-   EXPORT JSON → /api/export (Python elabora)
+   EXPORT JSON
 ===================================================== */
-exportBtn.onclick = async () => {
+exportBtn.onclick = () => {
     if (!state.loaded) {
         alert("Nessuna immagine caricata.");
         return;
@@ -590,200 +537,58 @@ exportBtn.onclick = async () => {
         return;
     }
 
-    const id_immagine = document.getElementById("idImmagine").value.trim() || "IMG-UNKNOWN";
-    const id_setup    = document.getElementById("idSetup").value.trim()    || "SETUP-UNKNOWN";
+    const idImmagine = document.getElementById("idImmagine").value.trim() || "IMG-UNKNOWN";
+    const idSetup    = document.getElementById("idSetup").value.trim()    || "SETUP-UNKNOWN";
 
-    const res = await fetch("/api/export", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            points:       state.points,
-            id_immagine,
-            id_setup,
-            image_width:  state.image.width,
-            image_height: state.image.height
-        })
-    });
+    const records = state.points.map((p, i) => buildPointRecord(p, i, idImmagine, idSetup));
 
-    const blob = await res.blob();
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement("a");
-    a.href     = url;
-    a.download = `export_${id_immagine}_${id_setup}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const exportData = {
+        export_metadata: {
+            exported_at:    new Date().toISOString(),
+            id_immagine:    idImmagine,
+            id_setup:       idSetup,
+            image_size: {
+                width:  state.image.width,
+                height: state.image.height
+            },
+            total_points:   records.length,
+            points_ok:      records.filter(r => r.stato_elaborazione === "completo").length,
+            points_warning: records.filter(r => r.stato_elaborazione === "warning").length,
+            points_error:   records.filter(r => r.stato_elaborazione === "incompleto").length
+        },
+        points: records
+    };
+
+    downloadJSON(exportData, `export_${idImmagine}_${idSetup}.json`);
 };
 
 /* =====================================================
-   MODAL DELETE
+   POINT RECORD BUILDER
 ===================================================== */
-cancelBtn.onclick = () => {
-    modal.classList.add("hidden");
-    selectedIndex = null;
-    drawOnlyCanvas();
-};
+function buildPointRecord(p, i, idImmagine, idSetup) {
+    const warnings = resolveWarnings(p, i);
+    const stato    = resolveStatus(p, warnings);
 
-deleteBtn.onclick = () => {
-    if (selectedIndex !== null && !isLocked()) {
-        state.points.splice(selectedIndex, 1);
-        history = [];
-        selectedIndex = null;
-        render();
-    }
-    modal.classList.add("hidden");
-};
+    return {
+        id:          i + 1,
+        id_immagine: idImmagine,
+        id_setup:    idSetup,
 
-/* =====================================================
-   MODE BUTTON
-===================================================== */
-function updateModeBtn() {
-    modeBtn.innerText = inputMode === "pixel" ? "📐 Modalità: Pixel" : "📏 Modalità: Reale";
-    modeBtn.style.background = inputMode === "pixel"
-        ? "linear-gradient(135deg, #1e3a5f, #2563eb)"
-        : "linear-gradient(135deg, #3b0764, #9333ea)";
+        posizione_pixel: {
+            x: parseFloat(p.x.toFixed(4)),
+            y: parseFloat(p.y.toFixed(4))
+        },
 
-    const labelXm = document.getElementById("labelXm");
-    const labelYm = document.getElementById("labelYm");
-    if (inputMode === "pixel") {
-        labelXm.textContent = "Xm — coordinata pixel (intero)";
-        labelYm.textContent = "Ym — coordinata pixel (intero)";
-        xmInput.placeholder = "es. 320";
-        ymInput.placeholder = "es. 240";
-        xmInput.step        = "1";
-        ymInput.step        = "1";
-    } else {
-        labelXm.textContent = "Xm — unità reale (virgola)";
-        labelYm.textContent = "Ym — unità reale (virgola)";
-        xmInput.placeholder = "es. 5,25";
-        ymInput.placeholder = "es. 3,80";
-        xmInput.step        = "any";
-        ymInput.step        = "any";
-    }
-}
+        posizione_reale_misurata: {
+            xm: p.xm ?? null,
+            ym: p.ym ?? null
+        },
 
-modeBtn.addEventListener("click", () => {
-    inputMode = inputMode === "pixel" ? "real" : "pixel";
-    updateModeBtn();
-});
+        posizione_reale_stimata: resolveEstimatedPosition(p),
 
-updateModeBtn();
-
-function parseCoord(raw) {
-    return parseFloat(raw.replace(",", "."));
-}
-
-/* =====================================================
-   MODAL NEW/EDIT POINT
-===================================================== */
-savePointBtn.addEventListener("click", () => {
-    const xmRaw = xmInput.value.trim();
-    const ymRaw = ymInput.value.trim();
-
-    if (xmRaw === "" || ymRaw === "") {
-        showError("Inserisci sia Xm che Ym.");
-        return;
-    }
-
-    let xmVal, ymVal;
-
-    if (inputMode === "pixel") {
-        xmVal = parseInt(xmRaw, 10);
-        ymVal = parseInt(ymRaw, 10);
-        if (isNaN(xmVal) || isNaN(ymVal) || xmVal <= 0 || ymVal <= 0) {
-            showError("In modalità Pixel inserisci interi > 0.");
-            return;
-        }
-    } else {
-        xmVal = parseCoord(xmRaw);
-        ymVal = parseCoord(ymRaw);
-        if (isNaN(xmVal) || isNaN(ymVal) || xmVal <= 0 || ymVal <= 0) {
-            showError("In modalità Reale inserisci numeri > 0 (usa , o .).");
-            return;
-        }
-    }
-
-    if (editingPointIndex !== null) {
-        state.points[editingPointIndex].xm   = xmVal;
-        state.points[editingPointIndex].ym   = ymVal;
-        state.points[editingPointIndex].mode = inputMode;
-        editingPointIndex = null;
-    } else if (pendingPoint) {
-        state.points.push({
-            x:    pendingPoint.x,
-            y:    pendingPoint.y,
-            xm:   xmVal,
-            ym:   ymVal,
-            mode: inputMode
-        });
-        pendingPoint = null;
-    }
-
-    pointModal.classList.add("hidden");
-    render();
-});
-
-
-cancelPointBtn.addEventListener("click", () => {
-    pendingPoint = null;
-    editingPointIndex = null;
-    pointModal.classList.add("hidden");
-});
-
-/* =====================================================
-   TABLE
-===================================================== */
-function renderTable() {
-    tbody.innerHTML = "";
-
-    state.points.forEach((p, i) => {
-        const row    = document.createElement("tr");
-        const status = resolveStatus(p);
-
-        const badgeClass = status === "completo"   ? "badge-ok"
-                         : status === "warning"    ? "badge-warning"
-                         :                           "badge-error";
-
-        const badgeLabel = status === "completo"   ? "OK"
-                         : status === "warning"    ? "WARN"
-                         :                           "ERR";
-
-        row.innerHTML = `
-            <td>${i + 1}</td>
-            <td>${p.x.toFixed(1)}</td>
-            <td>${p.y.toFixed(1)}</td>
-            <td>${p.xm ?? "—"}</td>
-            <td>${p.ym ?? "—"}</td>
-            <td><span class="badge ${badgeClass}">${badgeLabel}</span></td>
-        `;
-
-        row.addEventListener("mouseenter", () => {
-            hoverIndex = i;
-            drawOnlyCanvas();
-        });
-
-        row.addEventListener("mouseleave", () => {
-            hoverIndex = null;
-            drawOnlyCanvas();
-        });
-
-        row.addEventListener("click", () => {
-            selectedIndex    = i;
-            hoverIndex       = null;
-            modalText.textContent = `Punto #${i + 1} — X: ${p.x.toFixed(2)}, Y: ${p.y.toFixed(2)}`;
-            modal.classList.remove("hidden");
-            drawOnlyCanvas();
-        });
-
-        row.addEventListener("dblclick", () => {
-            editingPointIndex = i;
-            xmInput.value  = p.xm ?? "";
-            ymInput.value  = p.ym ?? "";
-            modal.classList.add("hidden");
-            pointModal.classList.remove("hidden");
-        });
-
-        tbody.appendChild(row);
-    });
+        warning:            warnings,
+        stato_elaborazione: stato
+    };
 }
 
 /* =====================================================
@@ -796,12 +601,14 @@ function resolveWarnings(p, i) {
     if (p.xm == null || p.ym == null) {
         warnings.push("MISSING_REAL_COORDS: Xm o Ym non definiti");
     }
+
     if (p.xm != null && p.xm <= 0) {
         warnings.push("INVALID_XM: Xm deve essere > 0");
     }
     if (p.ym != null && p.ym <= 0) {
         warnings.push("INVALID_YM: Ym deve essere > 0");
     }
+
     if (
         p.x < EDGE_MARGIN ||
         p.y < EDGE_MARGIN ||
@@ -851,6 +658,126 @@ function resolveEstimatedPosition(p) {
 }
 
 /* =====================================================
+   TABLE
+===================================================== */
+function renderTable() {
+    tbody.innerHTML = "";
+
+    state.points.forEach((p, i) => {
+        const row    = document.createElement("tr");
+        const status = resolveStatus(p);
+
+        const badgeClass = status === "completo"   ? "badge-ok"
+                         : status === "warning"    ? "badge-warning"
+                         :                           "badge-error";
+
+        const badgeLabel = status === "completo"   ? "OK"
+                         : status === "warning"    ? "WARN"
+                         :                           "ERR";
+
+        row.innerHTML = `
+            <td>${i + 1}</td>
+            <td>${p.x.toFixed(1)}</td>
+            <td>${p.y.toFixed(1)}</td>
+            <td>${p.xm ?? "—"}</td>
+            <td>${p.ym ?? "—"}</td>
+            <td><span class="badge ${badgeClass}">${badgeLabel}</span></td>
+        `;
+
+        row.addEventListener("mouseenter", () => {
+            hoverIndex = i;
+            drawOnlyCanvas();
+        });
+
+        row.addEventListener("mouseleave", () => {
+            hoverIndex = null;
+            drawOnlyCanvas();
+        });
+
+        row.addEventListener("click", () => {
+            selectedIndex    = i;
+            hoverIndex       = null;
+            modalText.textContent = `Punto #${i + 1} — X: ${p.x.toFixed(2)}, Y: ${p.y.toFixed(2)}`;
+            modal.classList.remove("hidden");
+            drawOnlyCanvas();
+        });
+
+        // Double-click per editare Xm/Ym
+        row.addEventListener("dblclick", () => {
+            editingPointIndex = i;
+            xmInput.value  = p.xm ?? "";
+            ymInput.value  = p.ym ?? "";
+            modal.classList.add("hidden");
+            pointModal.classList.remove("hidden");
+        });
+
+        tbody.appendChild(row);
+    });
+}
+
+/* =====================================================
+   MODAL DELETE
+===================================================== */
+cancelBtn.onclick = () => {
+    modal.classList.add("hidden");
+    selectedIndex = null;
+    drawOnlyCanvas();
+};
+
+deleteBtn.onclick = () => {
+    if (selectedIndex !== null && !isLocked()) {
+        state.points.splice(selectedIndex, 1);
+        history = [];
+        selectedIndex = null;
+        render();
+    }
+    modal.classList.add("hidden");
+};
+
+/* =====================================================
+   MODAL NEW/EDIT POINT
+===================================================== */
+savePointBtn.addEventListener("click", () => {
+    const xm = xmInput.value.trim();
+    const ym = ymInput.value.trim();
+
+    if (xm === "" || ym === "") {
+        showError("Inserisci sia Xm che Ym.");
+        return;
+    }
+    if (Number(xm) <= 0 || Number(ym) <= 0) {
+        showError("Xm e Ym devono essere maggiori di 0.");
+        return;
+    }
+
+    // Se sta editando un punto esistente
+    if (editingPointIndex !== null) {
+        state.points[editingPointIndex].xm = Number(xm);
+        state.points[editingPointIndex].ym = Number(ym);
+        editingPointIndex = null;
+    } 
+    // Altrimenti crea un nuovo punto
+    else if (pendingPoint) {
+        state.points.push({
+           x:  isPixelMode ? Math.round(pendingPoint.x) : pendingPoint.x,
+           y:  isPixelMode ? Math.round(pendingPoint.y) : pendingPoint.y,
+           xm: Number(xm),
+           ym: Number(ym)
+        });
+        pendingPoint = null;
+    }
+
+    pointModal.classList.add("hidden");
+    render();
+});
+
+cancelPointBtn.addEventListener("click", () => {
+    pendingPoint = null;
+    editingPointIndex = null;
+    pointModal.classList.add("hidden");
+});
+
+/* =====================================================
    ERROR POPUP
 ===================================================== */
 function showError(msg) {
@@ -886,4 +813,69 @@ function downloadJSON(data, filename) {
     a.download = filename;
     a.click();
     URL.revokeObjectURL(url);
-}
+}   
+/* =========================
+   EXPORT CSV
+========================= */
+const exportCsvBtn = document.getElementById("exportCsvBtn");
+
+exportCsvBtn.onclick = () => {
+    if (state.points.length === 0) {
+        alert("Nessun punto da esportare.");
+        return;
+    }
+
+    const headers = ["id", "x_pixel", "y_pixel", "x_reale", "y_reale"];
+
+const rows = state.points.map((p, i) => [
+    i + 1,
+    String(p.x.toFixed(2)).replace(".", ","),
+    String(p.y.toFixed(2)).replace(".", ","),
+    p.xm ?? "",
+    p.ym ?? ""
+]);
+
+const csvContent = [headers, ...rows]
+    .map(row => row.join(";"))
+    .join("\n");
+
+    const idImmagine = document.getElementById("idImmagine")?.value.trim();
+    const filename = idImmagine ? `${idImmagine}_points.csv` : "points.csv";
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+
+    a.href     = url;
+    a.download = filename;
+    a.click();
+
+    URL.revokeObjectURL(url);
+};
+
+/* =====================================================
+   MODE BUTTON (Pixel / Reale)
+===================================================== */
+const modeBtn = document.getElementById("modeBtn");
+let isPixelMode = true;
+
+modeBtn.onclick = () => {
+    isPixelMode = !isPixelMode;
+    modeBtn.innerText = isPixelMode ? "📐 Modalità: Pixel" : "📐 Modalità: Reale";
+
+    if (isPixelMode) {
+        xmInput.step        = "1";
+        xmInput.placeholder = "es. 320";
+        ymInput.step        = "1";
+        ymInput.placeholder = "es. 240";
+        document.getElementById("labelXm").innerText = "Xm — coordinata pixel (intero)";
+        document.getElementById("labelYm").innerText = "Ym — coordinata pixel (intero)";
+    } else {
+        xmInput.step        = "0.0001";
+        xmInput.placeholder = "es. 12.345";
+        ymInput.step        = "0.0001";
+        ymInput.placeholder = "es. 8.720";
+        document.getElementById("labelXm").innerText = "Xm — coordinata reale (decimale)";
+        document.getElementById("labelYm").innerText = "Ym — coordinata reale (decimale)";
+    }
+};
