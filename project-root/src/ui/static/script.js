@@ -25,8 +25,10 @@ const savePointBtn = document.getElementById("savePointBtn");
 const cancelPointBtn = document.getElementById("cancelPointBtn");
 
 const tbody = document.querySelector("#pointsTable tbody");
+const modeBtn = document.getElementById("modeBtn");
 
 editBtn.classList.add("edit-off");
+canvas.style.cursor = "none";
 
 /* =====================================================
    STATE
@@ -40,6 +42,9 @@ let state = {
     saved:  false
 };
 
+// inputMode: "pixel" = coordinate pixel intere | "real" = unità reali con virgola
+let inputMode = "pixel";
+
 let imgX = 0;
 let imgY = 0;
 
@@ -50,6 +55,9 @@ let pan = {
     offsetX: 0,
     offsetY: 0
 };
+
+let mouseCanvasX = 0;
+let mouseCanvasY = 0;
 
 let selectedIndex = null;
 let hoverIndex    = null;
@@ -207,6 +215,37 @@ function drawOnlyCanvas() {
         ctx.fillText(`#${i + 1}`, px + size + 3, py - size);
     });
 
+    // Custom crosshair cursor — + piena
+    if (state.loaded) {
+        const cx  = mouseCanvasX;
+        const cy  = mouseCanvasY;
+        const arm = 12;
+
+        ctx.save();
+
+        // Ombra nera per contrasto su qualsiasi sfondo
+        ctx.strokeStyle = "#000000";
+        ctx.lineWidth   = 3;
+        ctx.beginPath();
+        ctx.moveTo(cx - arm, cy);
+        ctx.lineTo(cx + arm, cy);
+        ctx.moveTo(cx, cy - arm);
+        ctx.lineTo(cx, cy + arm);
+        ctx.stroke();
+
+        // + bianca sopra
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth   = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(cx - arm, cy);
+        ctx.lineTo(cx + arm, cy);
+        ctx.moveTo(cx, cy - arm);
+        ctx.lineTo(cx, cy + arm);
+        ctx.stroke();
+
+        ctx.restore();
+    }
+
     renderDebug();
 }
 
@@ -226,8 +265,14 @@ canvas.addEventListener("click", (e) => {
     const cx   = e.clientX - rect.left;
     const cy   = e.clientY - rect.top;
 
-    const x = (cx - imgX) / state.scale;
-    const y = (cy - imgY) / state.scale;
+    let x = (cx - imgX) / state.scale;
+    let y = (cy - imgY) / state.scale;
+
+    // In modalità pixel snap all'intero più vicino
+    if (inputMode === "pixel") {
+        x = Math.round(x);
+        y = Math.round(y);
+    }
 
     if (!isInsideImage(x, y)) return;
 
@@ -345,14 +390,18 @@ canvas.addEventListener("mousemove", (e) => {
     const x    = (cx - imgX) / state.scale;
     const y    = (cy - imgY) / state.scale;
 
+    mouseCanvasX = cx;
+    mouseCanvasY = cy;
+
     // Drag punto
     if (isDraggingPoint && dragPointIndex !== null) {
         if (isInsideImage(x, y)) {
-            state.points[dragPointIndex].x = x;
-            state.points[dragPointIndex].y = y;
+            state.points[dragPointIndex].x = inputMode === "pixel" ? Math.round(x) : x;
+            state.points[dragPointIndex].y = inputMode === "pixel" ? Math.round(y) : y;
             pointWasMoved = true;
             render();
         }
+        drawOnlyCanvas(); // aggiorna crosshair anche durante drag
         return;
     }
 
@@ -366,6 +415,9 @@ canvas.addEventListener("mousemove", (e) => {
 
         clampPan();
         render();
+    } else {
+        // Ridisegna solo il canvas per aggiornare posizione crosshair
+        drawOnlyCanvas();
     }
 
     // Cursor coords overlay
@@ -377,12 +429,20 @@ canvas.addEventListener("mousemove", (e) => {
     cursorCoords.style.display = "block";
     cursorCoords.style.left    = (cx + 16) + "px";
     cursorCoords.style.top     = (cy + 16) + "px";
-    cursorCoords.textContent   = `X: ${x.toFixed(2)} | Y: ${y.toFixed(2)}`;
+    if (inputMode === "pixel") {
+        cursorCoords.textContent = `X: ${Math.round(x)} | Y: ${Math.round(y)}`;
+    } else {
+        // mostra con 3 decimali e virgola (es. 5,320)
+        cursorCoords.textContent = `X: ${x.toFixed(3).replace(".", ",")} | Y: ${y.toFixed(3).replace(".", ",")}`;
+    }
 });
 
 canvas.addEventListener("mouseleave", () => {
     cursorCoords.style.display = "none";
-    pan.active = false;
+    pan.active   = false;
+    mouseCanvasX = -100;
+    mouseCanvasY = -100;
+    drawOnlyCanvas();
 });
 
 window.addEventListener("mouseup", () => {
@@ -604,31 +664,86 @@ deleteBtn.onclick = () => {
 };
 
 /* =====================================================
+   MODE BUTTON
+===================================================== */
+function updateModeBtn() {
+    modeBtn.innerText = inputMode === "pixel" ? "📐 Modalità: Pixel" : "📏 Modalità: Reale";
+    modeBtn.style.background = inputMode === "pixel"
+        ? "linear-gradient(135deg, #1e3a5f, #2563eb)"
+        : "linear-gradient(135deg, #3b0764, #9333ea)";
+
+    const labelXm = document.getElementById("labelXm");
+    const labelYm = document.getElementById("labelYm");
+    if (inputMode === "pixel") {
+        labelXm.textContent = "Xm — coordinata pixel (intero)";
+        labelYm.textContent = "Ym — coordinata pixel (intero)";
+        xmInput.placeholder = "es. 320";
+        ymInput.placeholder = "es. 240";
+        xmInput.step        = "1";
+        ymInput.step        = "1";
+    } else {
+        labelXm.textContent = "Xm — unità reale (virgola)";
+        labelYm.textContent = "Ym — unità reale (virgola)";
+        xmInput.placeholder = "es. 5,25";
+        ymInput.placeholder = "es. 3,80";
+        xmInput.step        = "any";
+        ymInput.step        = "any";
+    }
+}
+
+modeBtn.addEventListener("click", () => {
+    inputMode = inputMode === "pixel" ? "real" : "pixel";
+    updateModeBtn();
+});
+
+updateModeBtn();
+
+function parseCoord(raw) {
+    return parseFloat(raw.replace(",", "."));
+}
+
+/* =====================================================
    MODAL NEW/EDIT POINT
 ===================================================== */
 savePointBtn.addEventListener("click", () => {
-    const xm = xmInput.value.trim();
-    const ym = ymInput.value.trim();
+    const xmRaw = xmInput.value.trim();
+    const ymRaw = ymInput.value.trim();
 
-    if (xm === "" || ym === "") {
+    if (xmRaw === "" || ymRaw === "") {
         showError("Inserisci sia Xm che Ym.");
         return;
     }
-    if (Number(xm) <= 0 || Number(ym) <= 0) {
-        showError("Xm e Ym devono essere maggiori di 0.");
-        return;
+
+    let xmVal, ymVal;
+
+    if (inputMode === "pixel") {
+        xmVal = parseInt(xmRaw, 10);
+        ymVal = parseInt(ymRaw, 10);
+        if (isNaN(xmVal) || isNaN(ymVal) || xmVal <= 0 || ymVal <= 0) {
+            showError("In modalità Pixel inserisci interi > 0.");
+            return;
+        }
+    } else {
+        xmVal = parseCoord(xmRaw);
+        ymVal = parseCoord(ymRaw);
+        if (isNaN(xmVal) || isNaN(ymVal) || xmVal <= 0 || ymVal <= 0) {
+            showError("In modalità Reale inserisci numeri > 0 (usa , o .).");
+            return;
+        }
     }
 
     if (editingPointIndex !== null) {
-        state.points[editingPointIndex].xm = Number(xm);
-        state.points[editingPointIndex].ym = Number(ym);
+        state.points[editingPointIndex].xm   = xmVal;
+        state.points[editingPointIndex].ym   = ymVal;
+        state.points[editingPointIndex].mode = inputMode;
         editingPointIndex = null;
     } else if (pendingPoint) {
         state.points.push({
-            x:  pendingPoint.x,
-            y:  pendingPoint.y,
-            xm: Number(xm),
-            ym: Number(ym)
+            x:    pendingPoint.x,
+            y:    pendingPoint.y,
+            xm:   xmVal,
+            ym:   ymVal,
+            mode: inputMode
         });
         pendingPoint = null;
     }
@@ -636,6 +751,7 @@ savePointBtn.addEventListener("click", () => {
     pointModal.classList.add("hidden");
     render();
 });
+
 
 cancelPointBtn.addEventListener("click", () => {
     pendingPoint = null;
