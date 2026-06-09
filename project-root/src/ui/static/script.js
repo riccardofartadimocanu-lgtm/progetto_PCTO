@@ -858,24 +858,38 @@ const csvContent = [headers, ...rows]
 ===================================================== */
 const modeBtn = document.getElementById("modeBtn");
 let isPixelMode = true;
+modeBtn.classList.add("mode-pixel");
 
 modeBtn.onclick = () => {
     isPixelMode = !isPixelMode;
-    modeBtn.innerText = isPixelMode ? "📐 Modalità: Pixel" : "📐 Modalità: Reale";
+
+    modeBtn.innerText =
+        isPixelMode
+            ? "📐 Modalità: Pixel"
+            : "📐 Modalità: Reale";
+
+    modeBtn.classList.remove("mode-pixel", "mode-real");
+    modeBtn.classList.add(
+        isPixelMode ? "mode-pixel" : "mode-real"
+    );
 
     if (isPixelMode) {
-        xmInput.step        = "1";
+        xmInput.step = "1";
         xmInput.placeholder = "es. 320";
-        ymInput.step        = "1";
+        ymInput.step = "1";
         ymInput.placeholder = "es. 240";
-        document.getElementById("labelXm").innerText = "Xm — coordinata pixel (intero)";
-        document.getElementById("labelYm").innerText = "Ym — coordinata pixel (intero)";
+        document.getElementById("labelXm").innerText =
+            "Xm — coordinata pixel (intero)";
+        document.getElementById("labelYm").innerText =
+            "Ym — coordinata pixel (intero)";
     } else {
-        xmInput.step        = "0.0001";
+        xmInput.step = "0.0001";
         xmInput.placeholder = "es. 12.345";
-        ymInput.step        = "0.0001";
+        ymInput.step = "0.0001";
         ymInput.placeholder = "es. 8.720";
-        document.getElementById("labelXm").innerText = "Xm — coordinata reale (decimale)";
-        document.getElementById("labelYm").innerText = "Ym — coordinata reale (decimale)";
+        document.getElementById("labelXm").innerText =
+            "Xm — coordinata reale (decimale)";
+        document.getElementById("labelYm").innerText =
+            "Ym — coordinata reale (decimale)";
     }
 };
