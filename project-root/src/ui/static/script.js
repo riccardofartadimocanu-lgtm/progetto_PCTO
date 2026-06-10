@@ -26,6 +26,15 @@ const cancelPointBtn = document.getElementById("cancelPointBtn");
 
 const tbody = document.querySelector("#pointsTable tbody");
 
+const calibrateBtn     = document.getElementById("calibrateBtn");
+const calibModal       = document.getElementById("calibModal");
+const calibCanvas      = document.getElementById("calibCanvas");
+const calibCtx         = calibCanvas.getContext("2d");
+const closeCalibBtn    = document.getElementById("closeCalibBtn");
+const downloadCalibBtn = document.getElementById("downloadCalibBtn");
+const calibInfo        = document.getElementById("calibInfo");
+const calibSpinner     = document.getElementById("calibSpinner");
+
 editBtn.classList.add("edit-off");
 
 /* =====================================================
@@ -267,33 +276,8 @@ canvas.addEventListener("wheel", (e) => {
 
     e.preventDefault();
 
-    const rect = canvas.getBoundingClientRect();
-
-    // posizione mouse sul canvas
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
-
-    // posizione del mouse nello "spazio immagine" prima dello zoom
-    const xBeforeZoom = (mx - imgX) / state.scale;
-    const yBeforeZoom = (my - imgY) / state.scale;
-
-    // nuova scala
-    const zoomFactor = (e.deltaY < 0) ? 1.1 : 0.9;
-    const newScale = Math.max(0.1, Math.min(state.scale * zoomFactor, 10));
-
-    // aggiorna scala
-    state.scale = newScale;
-
-    // aggiorna offset per mantenere fisso il punto sotto il mouse
-    const newW = state.image.width * state.scale;
-    const newH = state.image.height * state.scale;
-
-    imgX = mx - xBeforeZoom * state.scale;
-    imgY = my - yBeforeZoom * state.scale;
-
-    // converti imgX/imgY in pan offset
-    pan.offsetX = imgX - (canvas.width - newW) / 2;
-    pan.offsetY = imgY - (canvas.height - newH) / 2;
+    state.scale *= (e.deltaY < 0) ? 1.1 : 0.9;
+    state.scale  = Math.max(0.1, Math.min(state.scale, 30));
 
     clampPan();
     render();
@@ -920,3 +904,113 @@ modeBtn.onclick = () => {
             "Ym — coordinata reale (decimale)";
     }
 };
+
+/* =====================================================
+   CALIBRAZIONE
+===================================================== */
+calibrateBtn.onclick = async () => {
+    if (!state.loaded) {
+        alert("Nessuna immagine caricata.");
+        return;
+    }
+    if (state.points.length < 4) {
+        alert("Servono almeno 4 punti per la calibrazione.");
+        return;
+    }
+    const incomplete = state.points.filter(p => p.xm == null || p.ym == null);
+    if (incomplete.length > 0) {
+        alert(`${incomplete.length} punto/i senza coordinate reali (Xm/Ym). Completali prima di calibrare.`);
+        return;
+    }
+
+    calibSpinner.classList.remove("hidden");
+    calibrateBtn.disabled = true;
+
+    // Cattura immagine originale a piena risoluzione
+    const offscreen = document.createElement("canvas");
+    offscreen.width  = state.image.width;
+    offscreen.height = state.image.height;
+    offscreen.getContext("2d").drawImage(state.image, 0, 0);
+
+    try {
+        const response = await fetch("/api/calibrate", {
+            method:  "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                imageBase64: offscreen.toDataURL("image/png"),
+                points:      state.points
+            })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || result.error) {
+            alert("Errore calibrazione: " + (result.error || "Risposta non valida."));
+            return;
+        }
+
+        showCalibResult(result);
+
+    } catch (err) {
+        alert("Errore di rete: " + err.message);
+    } finally {
+        calibSpinner.classList.add("hidden");
+        calibrateBtn.disabled = false;
+    }
+};
+
+function showCalibResult(result) {
+    const img = new Image();
+
+    img.onload = () => {
+        // Disegna l'immagine raddrizzata
+        calibCanvas.width  = img.width;
+        calibCanvas.height = img.height;
+        calibCtx.drawImage(img, 0, 0);
+
+        // Mirini sui punti proiettati
+        result.projected_points.forEach((pt, i) => {
+            const [px, py] = pt;
+            const size     = 9;
+            const color    = "#facc15";
+
+            calibCtx.strokeStyle = color;
+            calibCtx.lineWidth   = 2;
+
+            calibCtx.beginPath();
+            calibCtx.moveTo(px - size, py);
+            calibCtx.lineTo(px + size, py);
+            calibCtx.stroke();
+
+            calibCtx.beginPath();
+            calibCtx.moveTo(px, py - size);
+            calibCtx.lineTo(px, py + size);
+            calibCtx.stroke();
+
+            calibCtx.fillStyle = color;
+            calibCtx.font      = "bold 12px monospace";
+            calibCtx.fillText(`#${i + 1}`, px + size + 3, py - size);
+        });
+
+        // Barra info
+        calibInfo.textContent =
+            `Scala: ${result.scale_factor.toFixed(3)} px/mm  |  ` +
+            `Output: ${result.output_shape[0]} × ${result.output_shape[1]} px  |  ` +
+            `Punti: ${result.projected_points.length}`;
+
+        // Download
+        downloadCalibBtn.onclick = () => {
+            const idImg = document.getElementById("idImmagine").value.trim() || "img";
+            const a     = document.createElement("a");
+            a.href      = calibCanvas.toDataURL("image/png");
+            a.download  = `calibrated_${idImg}.png`;
+            a.click();
+        };
+
+        calibModal.classList.remove("hidden");
+    };
+
+    img.src = result.imageBase64;
+}
+
+closeCalibBtn.onclick = () => calibModal.classList.add("hidden");   

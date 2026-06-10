@@ -1,7 +1,10 @@
 from flask import Flask, render_template, request, jsonify, send_file
 import os, json, io
 from datetime import datetime
-
+import base64
+import numpy as np
+import cv2
+from cv_modules.calibrate import ImageCalibration
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 app = Flask(__name__,
@@ -104,6 +107,55 @@ def api_load():
     if "imageBase64" not in data or "points" not in data:
         return jsonify({"error": "File non valido"}), 400
     return jsonify({"status": "ok", "data": data})
+
+@app.route("/api/calibrate", methods=["POST"])
+def api_calibrate():
+    try:
+        body    = request.get_json()
+        img_b64 = body.get("imageBase64", "")
+        points  = body.get("points", [])
+
+        if len(points) < 4:
+            return jsonify({"error": "Servono almeno 4 punti per la calibrazione."}), 400
+
+        # Rimuovi il prefisso data URL se presente
+        if "," in img_b64:
+            img_b64 = img_b64.split(",")[1]
+
+        # Decodifica immagine
+        img_bytes = base64.b64decode(img_b64)
+        nparr     = np.frombuffer(img_bytes, np.uint8)
+        image     = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+        if image is None:
+            return jsonify({"error": "Impossibile decodificare l'immagine."}), 400
+
+        # Estrai coppie di punti
+        punti_pixel = [(float(p["x"]),  float(p["y"]))  for p in points]
+        punti_mm    = [(float(p["xm"]), float(p["ym"])) for p in points]
+
+        # Uso i metodi singoli perché calibrate() ha un bug nel tipo di ritorno
+        calibrator  = ImageCalibration()
+        calib_info  = calibrator.find_homography(punti_pixel, punti_mm)
+        undistorted = calibrator.undistort_image(image)
+        new_points  = calibrator.transform_points(punti_pixel)
+
+        # np.int64 non è JSON-serializzabile, converto a int
+        new_points_clean = [[int(x), int(y)] for x, y in new_points]
+
+        # Codifica immagine risultante
+        _, buffer  = cv2.imencode(".png", undistorted)
+        result_b64 = "data:image/png;base64," + base64.b64encode(buffer).decode()
+
+        return jsonify({
+            "imageBase64":      result_b64,
+            "projected_points": new_points_clean,
+            "scale_factor":     float(calib_info.scale_factor),
+            "output_shape":     [int(calib_info.output_shape[0]), int(calib_info.output_shape[1])]
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
