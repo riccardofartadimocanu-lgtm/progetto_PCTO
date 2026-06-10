@@ -1,40 +1,295 @@
-# PROGETTO PCTO
+# Progetto PCTO – Sistema di Annotazione e Calibrazione di Immagini
 
-## Descrizione del progetto
+## Descrizione del Progetto
 
-Il progetto consiste in una web application sviluppata in Python che permette il caricamento, la visualizzazione e la modifica di immagini tramite un’interfaccia grafica interattiva.
+Il progetto consiste in una web application sviluppata in Python e Flask che permette il caricamento, la visualizzazione, l'annotazione e la calibrazione geometrica di immagini tramite un'interfaccia grafica interattiva.
 
-L’applicazione consente all’utente di:
+L'applicazione consente di selezionare punti di interesse sull'immagine, associare coordinate reali ai punti acquisiti ed effettuare una calibrazione prospettica per ottenere una rappresentazione corretta dell'immagine e delle coordinate associate.
 
-* caricare immagini dal file explorer;
-* effettuare zoom avanti e indietro sull’immagine;
-* spostarsi all’interno dell’immagine tramite funzione di pan;
-* inserire punti direttamente sull’immagine;
-* visualizzare le coordinate dei punti inseriti;
-* eliminare punti non ancora salvati;
-* esportare i punti in formato JSON;
-* caricare punti precedentemente salvati tramite file JSON;
-* salvare i punti selezionati per utilizzi successivi.
+I dati acquisiti possono essere esportati e successivamente riutilizzati per analisi, elaborazioni automatiche e conversioni tra coordinate immagine e coordinate reali.
 
-I punti salvati rappresentano coordinate in pixel che verranno utilizzate successivamente per il calcolo di coordinate reali.
+---
+
+# Obiettivi del Progetto
+
+L'applicazione è stata progettata per:
+
+* acquisire punti di interesse da immagini;
+* memorizzare coordinate pixel e coordinate reali;
+* calibrare immagini mediante punti di riferimento;
+* correggere distorsioni prospettiche;
+* generare dataset strutturati;
+* preparare dati per future pipeline di Computer Vision e Image Processing.
+
+---
+
+# Funzionalità Principali
+
+## Caricamento Immagine
+
+L'utente può selezionare un'immagine tramite il file explorer del sistema operativo.
+
+Una volta caricata:
+
+* l'immagine viene visualizzata nell'area di lavoro;
+* vengono inizializzati gli strumenti di navigazione;
+* è possibile attivare la modalità di modifica.
+
+---
+
+## Modalità Edit
+
+La modalità Edit abilita:
+
+* inserimento punti;
+* zoom;
+* pan;
+* visualizzazione coordinate.
+
+La modalità è disponibile solo dopo il caricamento di un'immagine.
+
+---
+
+## Inserimento Punti
+
+Durante la modalità Edit l'utente può:
+
+* selezionare punti direttamente sull'immagine;
+* visualizzare le coordinate;
+* associare informazioni aggiuntive ai punti.
+
+Per ogni punto vengono registrate:
+
+* coordinata pixel X;
+* coordinata pixel Y;
+* coordinata reale X;
+* coordinata reale Y.
+
+---
+
+## Gestione Coordinate
+
+L'applicazione gestisce due sistemi di riferimento:
+
+### Coordinate Pixel
+
+Rappresentano la posizione originale del punto sull'immagine.
+
+Esempio:
+
+```text
+(x, y)
+```
+
+### Coordinate Reali
+
+Rappresentano la posizione fisica associata al punto.
+
+Esempio:
+
+```text
+(xm, ym)
+```
+
+Queste coordinate vengono utilizzate durante la fase di calibrazione e nelle successive elaborazioni.
+
+---
+
+## Tabella dei Punti
+
+La tabella laterale mostra:
+
+* ID del punto;
+* coordinate pixel;
+* coordinate reali;
+* stato del punto.
+
+Funzionalità:
+
+* aggiornamento automatico;
+* eliminazione dei punti non salvati;
+* blocco delle modifiche dopo il salvataggio.
+
+---
+
+## Zoom
+
+La rotella del mouse consente di:
+
+* ingrandire l'immagine;
+* ridurre l'immagine;
+* lavorare con maggiore precisione.
+
+---
+
+## Pan
+
+Tenendo premuto il tasto destro del mouse è possibile:
+
+* spostarsi all'interno dell'immagine;
+* navigare immagini di grandi dimensioni.
+
+---
+
+# Sistema di Calibrazione
+
+## Calibrazione Geometrica
+
+L'applicazione integra un sistema di calibrazione prospettica che consente di correggere la deformazione dell'immagine.
+
+La procedura richiede almeno:
+
+```text
+4 punti di riferimento
+```
+
+associati a coordinate reali note.
+
+---
+
+## Trasformazione Omografica
+
+Durante la calibrazione viene calcolata una matrice di omografia che permette di:
+
+* correggere la prospettiva;
+* riallineare l'immagine;
+* convertire coordinate immagine in coordinate reali.
+
+Il processo genera:
+
+* immagine calibrata;
+* coordinate trasformate;
+* fattore di scala.
+
+---
+
+## Visualizzazione Risultato
+
+Dopo la calibrazione viene mostrata:
+
+* l'immagine corretta;
+* l'anteprima del risultato;
+* la possibilità di scaricare il file generato.
+
+---
+
+## Download PNG
+
+L'immagine calibrata può essere esportata in formato PNG.
+
+Questo permette di conservare il risultato della trasformazione per utilizzi successivi.
+
+---
+
+# Salvataggio dei Dati
+
+## Save
+
+Il pulsante Save:
+
+* salva definitivamente i punti;
+* blocca ulteriori modifiche;
+* garantisce l'integrità dei dati raccolti.
+
+---
+
+# Esportazione JSON
+
+I dati possono essere esportati in formato JSON.
+
+Il file contiene:
+
+* ID immagine;
+* ID setup;
+* coordinate pixel;
+* coordinate reali;
+* stato dei punti;
+* informazioni di validazione;
+* dati necessari al successivo caricamento.
+
+---
+
+# Esportazione CSV
+
+L'applicazione permette anche l'esportazione in formato CSV.
+
+Il file può essere utilizzato per:
+
+* fogli di calcolo;
+* software statistici;
+* elaborazioni automatiche;
+* pipeline esterne.
+
+---
+
+# Importazione JSON
+
+È possibile caricare file JSON precedentemente esportati.
+
+Durante l'importazione:
+
+* vengono ricostruiti i punti;
+* vengono ripristinate le coordinate;
+* vengono recuperati i metadati associati.
+
+---
+
+# Validazione Automatica
+
+Prima dell'esportazione viene eseguito un controllo automatico dei dati.
+
+La validazione verifica:
+
+* coordinate mancanti;
+* coordinate reali assenti;
+* punti duplicati;
+* punti vicini ai bordi dell'immagine;
+* completezza delle informazioni.
+
+Ogni punto può essere classificato come:
+
+```text
+COMPLETO
+WARNING
+INCOMPLETO
+```
+
+---
+
+# Stima delle Coordinate Reali
+
+Il sistema supporta la generazione di una posizione reale stimata basata sui dati disponibili.
+
+Questa funzionalità rappresenta il primo passo verso future elaborazioni automatiche e sistemi di analisi avanzata.
+
+---
+
+# Metadati Gestiti
+
+Per ogni sessione possono essere memorizzati:
+
+* ID Immagine;
+* ID Setup;
+* coordinate pixel;
+* coordinate reali;
+* stato della validazione;
+* informazioni di calibrazione.
 
 ---
 
 # Requisiti
 
-Per il corretto funzionamento dell’applicazione è necessario:
+Per eseguire il progetto è necessario:
 
-* avere installato Python 3.14;
-* avere installato le dipendenze presenti nel file `requirements.txt`;
-* avviare il server Flask in loopback locale.
+* Python 3.14 o superiore;
+* Flask;
+* dipendenze presenti nel file `requirements.txt`.
 
 ---
 
-# Avvio del progetto
+# Installazione
 
-## 1. Installazione dipendenze
-
-Aprire il terminale nella cartella `project-root` ed eseguire:
+## Installazione dipendenze
 
 ```bash
 pip install -r requirements.txt
@@ -42,21 +297,21 @@ pip install -r requirements.txt
 
 ---
 
-## 2. Avvio del server
+# Avvio dell'Applicazione
 
-Eseguire:
+Avviare il server Flask:
 
 ```bash
 python main.py
 ```
 
-oppure
+oppure:
 
 ```bash
 py main.py
 ```
 
-Successivamente aprire il browser all’indirizzo:
+Aprire successivamente il browser all'indirizzo:
 
 ```text
 http://127.0.0.1:5000
@@ -64,186 +319,48 @@ http://127.0.0.1:5000
 
 ---
 
-# Funzionalità principali
+# Workflow Operativo
 
-## Caricamento immagine
-
-Il pulsante **Carica immagine** permette di selezionare un’immagine tramite il file explorer del sistema operativo.
-
-Una volta caricata, l’immagine viene visualizzata all’interno dell’area di lavoro.
-
----
-
-## Modalità Edit
-
-Il pulsante **Edit** abilita:
-
-* zoom dell’immagine;
-* spostamento (pan) tramite tasto destro del mouse;
-* inserimento dei punti sull’immagine.
-
-Il pulsante Edit:
-
-* non funziona se non è stata caricata un’immagine;
-* viene automaticamente disabilitato dopo il salvataggio.
+1. Caricare un'immagine.
+2. Inserire ID immagine e ID setup.
+3. Attivare la modalità Edit.
+4. Inserire i punti di interesse.
+5. Associare le coordinate reali.
+6. Salvare i punti.
+7. Eseguire la calibrazione.
+8. Visualizzare il risultato.
+9. Scaricare l'immagine calibrata.
+10. Esportare i dati in JSON o CSV.
 
 ---
 
-## Inserimento punti
-
-Quando la modalità Edit è attiva è possibile:
-
-* cliccare sull’immagine;
-* aggiungere punti;
-* visualizzare le coordinate dei punti inseriti.
-
-Le coordinate vengono salvate in pixel relativi all’immagine originale e visualizzate nella tabella laterale.
-
----
-
-## Tabella Punti
-
-La tabella dei punti:
-
-* mostra le coordinate dei punti inseriti;
-* aggiorna automaticamente il numero di punti presenti;
-* permette la cancellazione dei punti prima del salvataggio;
-* mantiene i dati in sola lettura dopo il salvataggio.
-
-Una volta salvati, i punti non possono più essere modificati o eliminati.
-
----
-
-## Zoom
-
-Con la rotella del mouse è possibile:
-
-* ingrandire l’immagine;
-* rimpicciolire l’immagine.
-
-Lo zoom è disponibile solamente durante la modalità Edit.
-
----
-
-## Pan
-
-Tenendo premuto il tasto destro del mouse è possibile spostarsi all’interno dell’immagine.
-
-Il pan è disponibile solamente durante la modalità Edit.
-
----
-
-## Salvataggio
-
-Il pulsante **Save**:
-
-* salva i punti inseriti;
-* blocca ulteriori modifiche;
-* disabilita la modalità Edit fino al caricamento di una nuova immagine.
-
-Il pulsante Save non funziona se non sono presenti punti.
-
----
-
-## Esportazione JSON
-
-Il pulsante **Export JSON** permette di esportare i punti inseriti in un file JSON.
-
-Il file contiene:
-
-* coordinate dei punti;
-* identificativi dei punti;
-* informazioni necessarie per il successivo caricamento e utilizzo dei dati.
-
-L’esportazione consente di conservare il lavoro svolto e trasferirlo tra diverse sessioni dell’applicazione.
-
----
-
-## Importazione JSON
-
-Il pulsante **Load JSON** permette di caricare un file JSON precedentemente esportato.
-
-Durante il caricamento:
-
-* vengono ricostruiti i punti salvati;
-* vengono ripristinate le coordinate associate;
-* la tabella dei punti viene aggiornata automaticamente.
-
----
-
-## Gestione dati
-
-I dati dei punti vengono gestiti tramite strutture JSON che consentono:
-
-* facile esportazione;
-* facile importazione;
-* compatibilità tra frontend e backend;
-* estensibilità per future implementazioni.
-
----
-
-# Tecnologie utilizzate
+# Tecnologie Utilizzate
 
 ## Backend
 
-* Python 3.14
+* Python
 * Flask
 
----
-
 ## Frontend
 
-* HTML
-* CSS
+* HTML5
+* CSS3
 * JavaScript
 
----
+## Elaborazione Dati
 
-## Formati dati
+* JSON
+* CSV
 
-* JSON per il salvataggio e il caricamento dei punti
-* JSON per la comunicazione tra frontend e backend
+## Elaborazione Geometrica
 
----
-
-# Architettura del progetto
-
-L'applicazione segue una struttura modulare composta da:
-
-## Frontend
-
-Responsabile della gestione dell'interfaccia utente:
-
-* caricamento immagini;
-* gestione canvas;
-* zoom;
-* pan;
-* inserimento punti;
-* esportazione/importazione JSON.
-
-## Backend
-
-Responsabile della gestione dei dati e della logica applicativa:
-
-* ricezione delle richieste dal frontend;
-* elaborazione dei dati;
-* gestione della pipeline;
-* salvataggio e caricamento delle informazioni.
-
-## Pipeline
-
-La pipeline rappresenta il componente incaricato di coordinare il flusso dei dati all'interno dell'applicazione.
-
-Le sue responsabilità includono:
-
-* gestione dei punti inseriti;
-* preparazione dei dati per il salvataggio;
-* caricamento dei dati esportati;
-* integrazione futura con sistemi di analisi automatica.
+* Trasformazioni omografiche
+* Calibrazione prospettica
+* Conversione coordinate
 
 ---
 
-# Struttura del progetto
+# Architettura del Progetto
 
 ```text
 progetto_PCTO/
@@ -269,21 +386,24 @@ progetto_PCTO/
 
 ---
 
-# Sviluppi futuri
+# Sviluppi Futuri
 
-L’applicazione rappresenta una base per future implementazioni riguardanti:
+Le future evoluzioni del progetto includono:
 
-* conversione coordinate pixel → coordinate reali;
+* calibrazione automatica;
+* riconoscimento automatico dei punti;
+* integrazione con algoritmi di Computer Vision;
+* supporto multi-immagine;
 * gestione avanzata dei dataset;
-* salvataggio persistente dei progetti;
-* elaborazione automatica delle immagini;
-* introduzione di detector dedicati all'analisi delle immagini;
-* integrazione con pipeline di elaborazione avanzata;
-* validazione automatica dei punti inseriti;
-* esportazione in formati aggiuntivi.
+* database persistente;
+* esportazione in ulteriori formati;
+* analisi automatica delle misure;
+* integrazione con modelli di intelligenza artificiale.
 
 ---
 
-# Note
+# Stato del Progetto
 
-L'applicazione è attualmente in fase di sviluppo. La struttura adottata consente l'estensione delle funzionalità senza modifiche sostanziali all'architettura esistente, favorendo la separazione tra interfaccia grafica, logica applicativa e gestione dei dati.
+Il progetto è attualmente in fase di sviluppo avanzato e rappresenta una piattaforma modulare per l'acquisizione, la calibrazione e l'analisi di dati provenienti da immagini.
+
+L'architettura adottata garantisce scalabilità, manutenibilità ed estensibilità, consentendo l'integrazione di future funzionalità senza modifiche sostanziali alla struttura esistente.
