@@ -60,18 +60,28 @@
     <div id="cursorCoords">X: 0 Y: 0</div>
 </div>
 
-<!-- ========================= MODAL: elimina punto ========================= -->
+<!-- ========================= MODAL: azioni punto ========================= -->
 <div id="modal" class="modal hidden">
     <div class="modal-content">
-        <h3>Eliminare punto?</h3>
+        <h3>Gestione punto</h3>
+
         <p id="modal-text"></p>
+
         <div class="modal-actions">
-            <button id="cancelBtn" class="btn-secondary">Annulla</button>
-            <button id="deleteBtn" class="btn-danger">Elimina</button>
+            <button id="cancelBtn" class="btn-secondary">
+                Annulla
+            </button>
+
+            <button id="editPointBtn" class="btn-primary">
+                Modifica
+            </button>
+
+            <button id="deleteBtn" class="btn-danger">
+                Elimina
+            </button>
         </div>
     </div>
 </div>
-
 <!-- ========================= MODAL: nuovo/edit punto ========================= -->
 <div id="pointModal" class="modal hidden">
     <div class="modal-content">

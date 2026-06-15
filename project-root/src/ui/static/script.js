@@ -17,6 +17,7 @@ const modal = document.getElementById("modal");
 const modalText = document.getElementById("modal-text");
 const cancelBtn = document.getElementById("cancelBtn");
 const deleteBtn = document.getElementById("deleteBtn");
+const editPointBtn = document.getElementById("editPointBtn");
 
 const pointModal = document.getElementById("pointModal");
 const xmInput = document.getElementById("xmInput");
@@ -731,23 +732,21 @@ function renderTable() {
             drawOnlyCanvas();
         });
 
-        row.addEventListener("click", () => {
-            selectedIndex    = i;
-            hoverIndex       = null;
-            modalText.textContent = `Punto #${i + 1} — X: ${p.x.toFixed(2)}, Y: ${p.y.toFixed(2)}`;
-            modal.classList.remove("hidden");
-            drawOnlyCanvas();
-        });
+row.addEventListener("click", () => {
+    selectedIndex = i;
+    hoverIndex = null;
 
-        // Double-click per editare Xm/Ym
-        row.addEventListener("dblclick", () => {
-            editingPointIndex = i;
-            xmInput.value  = p.xm ?? "";
-            ymInput.value  = p.ym ?? "";
-            modal.classList.add("hidden");
-            pointModal.classList.remove("hidden");
-        });
+    modalText.textContent =
+        `Punto #${i + 1}
+X: ${p.x.toFixed(2)}
+Y: ${p.y.toFixed(2)}
+Xm: ${p.xm ?? "—"}
+Ym: ${p.ym ?? "—"}`;
 
+    modal.classList.remove("hidden");
+
+    drawOnlyCanvas();
+});
         tbody.appendChild(row);
     });
 }
@@ -760,7 +759,22 @@ cancelBtn.onclick = () => {
     selectedIndex = null;
     drawOnlyCanvas();
 };
+editPointBtn.onclick = () => {
+    if (
+        selectedIndex === null ||
+        isLocked()
+    ) return;
 
+    editingPointIndex = selectedIndex;
+
+    const p = state.points[selectedIndex];
+
+    xmInput.value = p.xm ?? "";
+    ymInput.value = p.ym ?? "";
+
+    modal.classList.add("hidden");
+    pointModal.classList.remove("hidden");
+};
 deleteBtn.onclick = () => {
     if (selectedIndex !== null && !isLocked()) {
         state.points.splice(selectedIndex, 1);
