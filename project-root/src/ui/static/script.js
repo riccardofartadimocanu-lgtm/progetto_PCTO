@@ -638,10 +638,10 @@ function resolveWarnings(p, i) {
         warnings.push("MISSING_REAL_COORDS: Xm o Ym non definiti");
     }
 
-    if (p.xm != null && p.xm <= 0) {
-        warnings.push("INVALID_XM: Xm deve essere > 0");
+    if (p.xm != null && p.xm < 0) {
+        warnings.push("INVALID_XM: Xm deve essere >0");
     }
-    if (p.ym != null && p.ym <= 0) {
+    if (p.ym != null && p.ym < 0) {
         warnings.push("INVALID_YM: Ym deve essere > 0");
     }
 
@@ -664,9 +664,10 @@ function resolveWarnings(p, i) {
 
     return warnings;
 }
+ 
 
 /* =====================================================
-   STATUS
+<<<<<<<<   STATUS
 ===================================================== */
 function resolveStatus(p, warnings) {
     const w = warnings ?? resolveWarnings(p, state.points.indexOf(p));
@@ -781,7 +782,7 @@ savePointBtn.addEventListener("click", () => {
         showError("Inserisci sia Xm che Ym.");
         return;
     }
-    if (Number(xm) <= 0 || Number(ym) <= 0) {
+    if (Number(xm) < 0 || Number(ym) < 0) {
         showError("Xm e Ym devono essere maggiori di 0.");
         return;
     }
