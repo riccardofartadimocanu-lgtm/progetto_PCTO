@@ -1,0 +1,183 @@
+DOCUMENTAZIONE LAVORO PCTO
+Descrizione del progetto
+Il progetto consiste in una web application sviluppata in Python che permette il caricamento, la visualizzazione e la modifica di immagini tramite un’interfaccia grafica interattiva.
+L’applicazione consente all’utente di:
+caricare immagini dal file explorer;
+effettuare zoom avanti e indietro sull’immagine;
+spostarsi all’interno dell’immagine tramite funzione di pan;
+inserire punti direttamente sull’immagine;
+modificare la posizione dei punti già inseriti tramite trascinamento;
+associare ad ogni punto coordinate reali espresse in millimetri;
+modificare le coordinate reali dei punti esistenti;
+salvare i punti selezionati per utilizzi successivi.
+Per ogni punto vengono memorizzate sia le coordinate in pixel relative all’immagine sia le coordinate reali (Xm, Ym) espresse in millimetri.
+
+Funzionalità principali
+Caricamento immagine
+Il pulsante "Carica immagine" permette di selezionare un’immagine tramite il file explorer del sistema operativo.
+Modalità Edit
+Il pulsante "Edit" abilita le seguenti funzioni:
+zoom dell’immagine;
+spostamento (pan) tramite tasto destro del mouse;
+inserimento di punti sull’immagine;
+modifica della posizione dei punti tramite trascinamento;
+modifica delle coordinate reali associate ai punti.
+Il pulsante Edit:
+non funziona se non è stata caricata un’immagine;
+viene disabilitato automaticamente dopo il salvataggio.
+Inserimento punti
+Quando la modalità Edit è attiva è possibile:
+cliccare sull’immagine;
+aggiungere nuovi punti;
+inserire le coordinate reali Xm e Ym in millimetri;
+visualizzare i punti inseriti.
+Per ogni punto vengono salvati:
+coordinate X e Y in pixel;
+coordinate Xm e Ym in millimetri.
+Le coordinate in pixel sono riferite all’immagine originale indipendentemente dal livello di zoom utilizzato.
+Modifica dei punti
+I punti già presenti possono essere modificati in due modi:
+Modifica della posizione
+tramite trascinamento del punto con il tasto sinistro del mouse;
+la nuova posizione viene aggiornata in tempo reale.
+Modifica delle coordinate reali
+click sul punto nella tabella
+premere il pulsante modifica
+aggiornamento dei valori Xm e Ym espressi in millimetri.
+Durante lo spostamento di un punto non viene creato alcun nuovo punto.
+Zoom
+Con la rotella del mouse è possibile:
+ingrandire l’immagine;
+rimpicciolire l’immagine.
+Lo zoom è disponibile solo in modalità Edit.
+Pan (spostamento immagine)
+Tenendo premuto il tasto destro del mouse è possibile spostarsi all’interno dell’immagine.
+Il pan è disponibile solo in modalità Edit.
+Salvataggio
+Il pulsante "Save":
+salva i punti inseriti;
+salva sia le coordinate pixel sia le coordinate reali;
+blocca ulteriori modifiche;
+disabilita la modalità Edit fino al caricamento di una nuova immagine.
+Il pulsante Save non funziona se non sono presenti punti.
+Tabella punti
+La tabella dei punti:
+mostra le coordinate in pixel;
+mostra le coordinate reali Xm e Ym;
+permette la cancellazione dei punti prima del salvataggio;
+non permette l’eliminazione dei punti dopo il salvataggio;
+viene aggiornata automaticamente dopo ogni modifica.
+
+Tecnologie utilizzate
+Backend
+Python 3.14
+Flask
+Frontend
+HTML
+CSS
+JavaScript
+Interfaccia aggiuntiva
+Tkinter (utilizzata durante le prime fasi di sviluppo e test)
+Formati dati 
+JSON per il salvataggio dei punti e delle coordinate
+
+Salvataggio dati
+Il formato utilizzato per il salvataggio dei dati è JSON e il formato CSV.
+Per ogni punto vengono memorizzate le seguenti informazioni:
+{
+  "x": 125,
+  "y": 340,
+  "xm": 52.3,
+  "ym": 18.7
+}
+dove:
+x, y rappresentano le coordinate pixel;
+xm, ym rappresentano le coordinate reali espresse in millimetri.
+
+nel formato csv che si può avere tramite il pulsante esporta csv i dati si vedranno in questa maniera all’interno del file 
+id
+xp
+yp
+xm
+ym
+1
+12
+32
+16
+40
+
+
+
+Modifica dei punti
+La modifica dei punti è disponibile esclusivamente in modalità Edit.
+Funzionalità disponibili:
+spostamento grafico del punto tramite drag & drop;
+aggiornamento delle coordinate pixel;
+modifica delle coordinate reali Xm e Ym;
+aggiornamento automatico della tabella dei punti.
+Le modifiche non sono più consentite dopo il salvataggio del progetto.
+
+Modifica del cursore
+il cursore è stato modificato affinchè fosse facilitato il l’inserimento al centro del punto  
+Modalità reale/pixel
+il pulsante permette lo switch tra le due modalità una permette l’inserimento di coordinate in decimali (modalità reale) e inserimento di solo valori interi (modalità pixel)
+
+Calibrate
+Il Calibrate è un modulo backend che utilizza i punti inseriti dall’utente per rimuovere la distorsione dell’immagine e ottenere una rappresentazione corretta dal punto di vista geometrico.
+La calibrazione si basa sulla classe ImageCalibration, che calcola una matrice di omografia a partire dalle coordinate pixel e dalle coordinate reali espresse in millimetri.
+Funzionamento
+Per eseguire la calibrazione è necessario che l’utente abbia inserito almeno quattro punti.
+Per ogni punto devono essere presenti:
+coordinate pixel (x, y) riferite all’immagine originale;
+coordinate reali (Xm, Ym) espresse in millimetri.
+Il modulo utilizza queste coppie di valori per:
+calcolare automaticamente il fattore di scala (pixel/mm) quando non specificato;
+determinare la matrice di omografia tramite algoritmo RANSAC;
+generare le dimensioni dell’immagine raddrizzata;
+correggere l’immagine tramite trasformazione prospettica;
+convertire i punti originali nelle nuove coordinate dell’immagine corretta.
+Fattore di scala
+Il fattore di scala viene calcolato confrontando la distanza in pixel tra due punti con la corrispondente distanza reale in millimetri.
+Se sono presenti quattro punti, viene considerato anche il lato opposto per preservare la massima risoluzione possibile.
+Omografia
+La matrice di omografia viene calcolata tramite:
+punti pixel come sorgente;
+punti reali convertiti in pixel tramite il fattore di scala come destinazione.
+Il calcolo utilizza RANSAC per garantire robustezza in presenza di punti inseriti in modo impreciso.
+Al termine vengono determinati:
+matrice H (3×3);
+numero di punti validi (inliers);
+dimensioni finali dell’immagine raddrizzata.
+Raddrizzamento immagine
+Una volta calcolata la matrice, l’immagine viene corretta tramite trasformazione prospettica.
+Il risultato è un’immagine raddrizzata, priva di distorsioni e scalata correttamente in millimetri.
+Trasformazione dei punti
+Il modulo permette anche di trasformare i punti originali nelle nuove coordinate dell’immagine raddrizzata.
+La trasformazione:
+applica la matrice di omografia ai punti pixel;
+arrotonda i valori ottenuti;
+restituisce le nuove coordinate come interi.
+Procedura completa
+Il metodo calibrate esegue automaticamente:
+calcolo dell’omografia;
+raddrizzamento dell’immagine;
+trasformazione dei punti;
+restituzione dei dati di calibrazione.
+Output
+Il modulo produce:
+immagine raddrizzata;
+punti trasformati;
+matrice di omografia;
+fattore di scala;
+dimensioni finali dell’immagine.
+
+
+Note finali
+L’applicazione rappresenta una base per future implementazioni, tra cui:
+conversione automatica coordinate pixel → coordinate reali;
+gestione avanzata dei dataset;
+salvataggio persistente dei progetti;
+elaborazione automatica delle immagini;
+integrazione con pipeline di analisi;
+esportazione dei dati in formati aggiuntivi.
+
