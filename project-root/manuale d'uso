@@ -1,0 +1,156 @@
+Manuale d’Uso dell’Applicazione Web per la Gestione, Annotazione e Calibrazione di Immagini
+1. Scopo del documento
+Il presente manuale descrive in modo formale le funzionalità, le modalità operative e le procedure d’uso dell’applicazione web sviluppata per il caricamento, la visualizzazione, l’annotazione e la calibrazione di immagini mediante l’inserimento di punti con coordinate in pixel e in millimetri.
+2. Panoramica dell’applicazione
+L’applicazione consente di:
+Caricare un’immagine dal file system.
+Effettuare operazioni di zoom e pan.
+Inserire punti sull’immagine.
+Modificare la posizione dei punti tramite trascinamento.
+Assegnare e modificare coordinate reali (in millimetri) ai punti inseriti.
+Salvare i dati in formato JSON e CSV.
+Esportare i punti annotati.
+Eseguire la calibrazione dell’immagine tramite punti di riferimento.
+Visualizzare e gestire i punti tramite tabella dedicata.
+Passare tra modalità di inserimento coordinate reali o pixel.
+L’interfaccia è progettata per garantire un utilizzo intuitivo, pur mantenendo un approccio rigoroso alla gestione dei dati.
+3. Requisiti tecnici
+3.1 Lato utente
+Browser web aggiornato (Chrome, Firefox, Edge, Safari).
+Accesso al server locale dell’applicazione.
+3.2 Lato sviluppatore
+Python 3.14
+Framework Flask
+Librerie per la gestione di immagini, JSON e calcolo matriciale (OpenCV, NumPy)
+4. Avvio dell’applicazione
+Per avviare l’applicazione:
+Eseguire il file principale tramite terminale:
+ python app.py
+
+
+Accedere tramite browser all’indirizzo indicato dal server (es. http://127.0.0.1:5000).
+Attendere il caricamento dell’interfaccia utente.
+5. Interfaccia utente
+L’interfaccia è composta dai seguenti elementi principali:
+Pulsante “Carica immagine”
+Pulsante “Edit”
+Pulsante “Save”
+Pulsanti di esportazione (JSON, CSV)
+Pulsante modalità reale/pixel
+Pulsante Calibrate
+Area di visualizzazione dell’immagine
+Tabella dei punti
+6. Caricamento dell’immagine
+Per caricare un’immagine:
+Selezionare il 7upulsante “Carica immagine”.
+Scegliere un file dal file explorer.
+L’immagine verrà visualizzata nell’area dedicata.
+Nota: La modalità Edit non può essere attivata senza un’immagine caricata.
+7. Modalità Edit
+La modalità Edit abilita tutte le funzionalità di modifica e annotazione.
+7.1 Attivazione
+Premere il pulsante “Edit”.
+La modalità viene automaticamente disabilitata dopo il salvataggio.
+7.2 Funzionalità disponibili
+Zoom dell’immagine.
+Pan tramite tasto destro del mouse.
+Inserimento di nuovi punti.
+Modifica della posizione dei punti tramite trascinamento.
+Modifica delle coordinate reali associate ai punti.
+Cambio modalità reale/pixel.
+Utilizzo del cursore modificato per facilitare l’inserimento preciso dei punti.
+8. Inserimento dei punti
+Durante la modalità Edit:
+Cliccare sull’immagine con il tasto sinistro.
+Viene creato un nuovo punto.
+Si apre una finestra per l’inserimento delle coordinate reali (Xm, Ym) o pixel, in base alla modalità selezionata.
+Il punto viene visualizzato e registrato nella tabella.
+8.1 Dati memorizzati
+Per ogni punto vengono salvati:
+x, y → coordinate pixel sull’immagine originale
+xm, ym → coordinate reali in millimetri
+Le coordinate pixel non dipendono dal livello di zoom.
+9. Modifica dei punti
+9.1 Modifica della posizione
+Selezionare il punto con il tasto sinistro.
+Trascinarlo nella nuova posizione.
+Le coordinate pixel vengono aggiornate automaticamente.
+9.2 Modifica delle coordinate reali
+Fare clic sulla riga corrispondente nella tabella.
+Premere il pulsante “Modifica”.
+Inserire i nuovi valori Xm e Ym.
+Confermare la modifica.
+10. Zoom dell’immagine
+Lo zoom è disponibile esclusivamente in modalità Edit.
+Rotella del mouse verso l’alto → ingrandimento
+Rotella del mouse verso il basso → riduzione
+11. Pan dell’immagine
+Il pan è disponibile solo in modalità Edit.
+Tenere premuto il tasto destro del mouse.
+Muovere il mouse per spostare l’immagine.
+12. Salvataggio dei dati
+Il pulsante “Save”:
+Salva tutti i punti inseriti.
+Registra sia le coordinate pixel sia quelle reali.
+Disabilita la modalità Edit.
+Impedisce ulteriori modifiche o eliminazioni dei punti.
+Il salvataggio è consentito solo se è presente almeno un punto.
+12.1 Formato di salvataggio
+I dati vengono salvati in formato JSON.
+Esempio:
+{
+  "x": 125,
+  "y": 340,
+  "xm": 52.3,
+  "ym": 18.7
+}
+
+13. Esporta
+13.1 Esporta JSON
+Permette l’esportazione dei punti in formato JSON, con la stessa struttura del salvataggio interno.
+13.2 Esporta CSV
+Permette l’esportazione dei punti in formato CSV.
+Formato del file:
+id xp yp xm ym
+1 12 32 16 40
+14. Tabella dei punti
+La tabella mostra:
+Coordinate pixel (x, y)
+Coordinate reali (Xm, Ym)
+14.1 Funzionalità
+Aggiornamento automatico dopo ogni modifica.
+Eliminazione dei punti solo prima del salvataggio.
+Nessuna eliminazione possibile dopo il salvataggio.
+15. Modalità reale/pixel
+Il pulsante dedicato permette di scegliere:
+Modalità reale: inserimento di coordinate Xm, Ym in millimetri (valori decimali).
+Modalità pixel: inserimento di coordinate x, y in pixel (solo valori interi).
+16. Calibrate
+La funzione Calibrate utilizza i punti inseriti per rimuovere la distorsione dell’immagine.
+16.1 Funzionamento
+Il sistema:
+Calcola automaticamente il fattore di scala (pixel/mm).
+Determina la matrice di omografia tramite algoritmo RANSAC.
+Raddrizza l’immagine tramite trasformazione prospettica.
+Converte i punti originali nelle nuove coordinate dell’immagine corretta.
+16.2 Requisiti
+Necessari almeno 4 punti.
+Le coordinate reali devono essere coerenti.
+Il punto reale più in alto a sinistra deve essere (0, 0).
+16.3 Output
+La calibrazione produce:
+Immagine raddrizzata.
+Punti trasformati.
+Matrice di omografia.
+Fattore di scala.
+Dimensioni finali dell’immagine.
+17. Limitazioni attuali
+Le modifiche non sono consentite dopo il salvataggio.
+La calibrazione richiede punti inseriti manualmente.
+Non è implementata la gestione di progetti multipli.
+18. Conclusioni
+L’applicazione costituisce uno strumento efficace per la gestione, l’annotazione e la calibrazione di immagini, offrendo funzionalità essenziali per l’inserimento e la modifica di punti con coordinate reali.
+ La struttura modulare del progetto consente future estensioni e integrazioni in contesti di analisi più complessi.
+
+
+
