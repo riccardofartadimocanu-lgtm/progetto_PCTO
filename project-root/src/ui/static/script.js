@@ -52,7 +52,6 @@ let state = {
 
 let imgX = 0;
 let imgY = 0;
-
 let pan = {
     active:  false,
     startX:  0,

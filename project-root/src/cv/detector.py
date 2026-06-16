@@ -6,6 +6,6 @@ class Detector(ABC):
     @abstractmethod
     def detect(self, frame):
         """
-        Restituisce una lista di detection.
+        Restituisce una lista di detection. 
         """
         pass
