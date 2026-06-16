@@ -1,0 +1,42 @@
+Divisione del lavoro
+Il progetto è attualmente in fase di sviluppo e il lavoro viene svolto attraverso una collaborazione continua tra tutti i membri del gruppo. I compiti sono stati suddivisi in base alle competenze e alle attività necessarie per la realizzazione dell'applicazione.
+
+Eric Andrei Lupasc – Sviluppo Backend
+Si occupa dello sviluppo della logica applicativa utilizzando Python e Flask. Le attività comprendono:
+gestione del caricamento delle immagini;
+implementazione del salvataggio dei dati in formato JSON;
+gestione delle coordinate dei punti e delle relative modifiche;
+sviluppo delle funzionalità di comunicazione tra frontend e backend;
+implementazione delle future funzionalità previste dal progetto.
+
+Riccardo Fartadi Mocanu – Sviluppo Frontend
+Si occupa della realizzazione dell'interfaccia grafica mediante HTML, CSS e JavaScript. In particolare:
+sviluppa l'interfaccia utente dell'applicazione;
+gestisce l'interazione tra utente e immagine;
+implementa le funzionalità di zoom, pan e selezione dei punti;
+cura l'aggiornamento dinamico della tabella contenente le coordinate;
+contribuisce al miglioramento dell'usabilità dell'applicazione.
+
+Michael Micillo – Documentazione e Ricerca
+Si occupa della documentazione e della raccolta di informazioni utili allo sviluppo del progetto. Le attività principali includono:
+stesura e aggiornamento della documentazione tecnica;
+descrizione delle funzionalità implementate e di quelle in sviluppo;
+ricerca online relativa alle tecnologie utilizzate;
+redazione della relazione finale del PCTO.
+
+Mattia Bergamin – Debug e Miglioramento
+Si occupa delle attività di verifica, test e ottimizzazione del software. In particolare:
+individua e corregge eventuali errori presenti nel codice;
+verifica il corretto funzionamento delle funzionalità sviluppate;
+propone miglioramenti per aumentare stabilità ed efficienza dell'applicazione;
+collabora alle attività di testing durante le diverse fasi di sviluppo.
+
+Collaborazione e Flessibilità del Team
+I ruoli assegnati rappresentano una linea guida generale per organizzare il lavoro, ma non limitano in alcun modo la partecipazione dei membri alle diverse attività del progetto. L’intero gruppo collabora in modo dinamico, intervenendo quando necessario anche in ambiti diversi dal proprio ruolo principale.
+Questa flessibilità permette di:
+supportare i compagni nelle fasi più complesse dello sviluppo;
+condividere conoscenze e competenze per migliorare la qualità complessiva dell’applicazione;
+garantire una maggiore continuità nel lavoro, anche in caso di imprevisti o difficoltà tecniche;
+favorire un apprendimento reciproco che arricchisce l’esperienza formativa del PCTO.
+Il progetto, quindi, non si basa su compartimenti rigidi, ma su una collaborazione continua, dove ogni membro contribuisce attivamente al raggiungimento degli obiettivi comuni, adattandosi alle esigenze che emergono durante lo sviluppo.
+
