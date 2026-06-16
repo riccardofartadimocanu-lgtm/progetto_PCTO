@@ -95,18 +95,8 @@ x, y rappresentano le coordinate pixel;
 xm, ym rappresentano le coordinate reali espresse in millimetri.
 
 nel formato csv che si può avere tramite il pulsante esporta csv i dati si vedranno in questa maniera all’interno del file 
-id
-xp
-yp
-xm
-ym
-1
-12
-32
-16
-40
-
-
+id xp yp xm ym
+1 12 32 16 40
 
 Modifica dei punti
 La modifica dei punti è disponibile esclusivamente in modalità Edit.
