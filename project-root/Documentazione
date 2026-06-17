@@ -162,7 +162,16 @@ fattore di scala;
 dimensioni finali dell’immagine.
 
 Analizza:
-il pulsante analizza l'immagine calibrata e il modello di ia riconosce le ventose nell'immagine 
+il pulsante Analizza permette di visualizzare il risultato dell’analisi effettuata sull’immagine calibrata tramite il modello di IA integrato.
+
+Funzionamento:
+
+viene mantenuto in memoria lo stato corrente dell’immagine e dei punti inseriti;
+viene caricata l’immagine generata dal processo di riconoscimento;
+viene mostrato il risultato del riconoscimento delle ventose sull’immagine;
+premendo nuovamente il pulsante viene ripristinata la vista precedente senza perdere i dati caricati.
+
+La funzione ha finalità di controllo visivo del risultato ottenuto e non modifica i punti salvati o le coordinate associate.
 
 Note finali
 L’applicazione rappresenta una base per future implementazioni, tra cui:
