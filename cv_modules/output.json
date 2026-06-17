@@ -1,0 +1,135 @@
+{
+    "metadata": {
+        "timestamp": "2026-06-17T10:20:00Z",
+        "image_source":"IMG_0016.jpg",
+        "scale_factor_px_mm": 10.0,
+        "undistorted_image_shape": [3727, 2233],
+        "detected_objects": [
+            {
+                "object_id": 0,
+                "label": "ventosa_mezza",
+                "confidence_score": 0.981,
+                "bounding_box_pixel": {
+                    "x_min": 3122,
+                    "y_min": 401,
+                    "x_max": 3324,
+                    "y_max": 736
+                },
+                "true_placement": {
+                    "x_global_mm": 3483,
+                    "y_global_mm": 656,
+                    "orientation_deg": 0
+                },
+                "grid_reference_point": 14
+            },
+
+            {
+                "object_id": 1,
+                "label": "ventosa_intera",
+                "confidence_score": 0.959,
+                "bounding_box_pixel": {
+                    "x_min": 326,
+                    "y_min": 419,
+                    "x_max": 722,
+                    "y_max": 590
+                },
+                "true_placement": {
+                    "x_global_mm": 521,
+                    "y_global_mm": 672,
+                    "orientation_deg": 91
+                },
+                "grid_reference_point": 23
+            },
+
+            {
+                "object_id": 2,
+                "label": "ventosa_intera",
+                "confidence_score": 0.952,
+                "bounding_box_pixel": {
+                    "x_min": 2829,
+                    "y_min": 98,
+                    "x_max": 3029,
+                    "y_max": 444
+                },
+                "true_placement": {
+                    "x_global_mm": 3159,
+                    "y_global_mm": 355,
+                    "orientation_deg": 184
+                },
+                "grid_reference_point": 10
+            },
+
+            {
+                "object_id": 3,
+                "label": "ventosa_mezza",
+                "confidence_score": 0.861,
+                "bounding_box_pixel": {
+                    "x_min": 200,
+                    "y_min": 908,
+                    "x_max": 620,
+                    "y_max": 1213
+                },
+                "true_placement": {
+                    "x_global_mm": 323,
+                    "y_global_mm": 1375,
+                    "orientation_deg": 54
+                },
+                "grid_reference_point": 47
+            },
+
+            {
+                "object_id": 4,
+                "label": "ventosa_quarto",
+                "confidence_score": 0.835,
+                "bounding_box_pixel": {
+                    "x_min": 647,
+                    "y_min": 917,
+                    "x_max": 868,
+                    "y_max": 1251
+                },
+                "true_placement": {
+                    "x_global_mm": 744,
+                    "y_global_mm": 1468,
+                    "orientation_deg": 182
+                },
+                "grid_reference_point": 46
+            },
+
+            {
+                "object_id": 5,
+                "label": "ventosa_quarto",
+                "confidence_score": 0.668,
+                "bounding_box_pixel": {
+                    "x_min": 3385,
+                    "y_min": 111,
+                    "x_max": 3562,
+                    "y_max": 451
+                },
+                "true_placement": {
+                    "x_global_mm": 3753,
+                    "y_global_mm": 364,
+                    "orientation_deg": 175
+                },
+                "grid_reference_point": 12
+            },
+
+            {
+                "object_id": 6,
+                "label": "ventosa_quarto",
+                "confidence_score": 0.606,
+                "bounding_box_pixel": {
+                    "x_min": 221,
+                    "y_min": 1337,
+                    "x_max": 630,
+                    "y_max": 1513
+                },
+                "true_placement": {
+                    "x_global_mm": 415,
+                    "y_global_mm": 1930,
+                    "orientation_deg": 95
+                },
+                "grid_reference_point": 50
+            }
+        ]   
+    }
+}
