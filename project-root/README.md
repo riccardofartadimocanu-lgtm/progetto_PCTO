@@ -401,6 +401,21 @@ Le future evoluzioni del progetto includono:
 * integrazione con modelli di intelligenza artificiale.
 
 ---
+# Funzione Analizza
+
+Analisi del risultato
+
+Dopo la calibrazione è disponibile il pulsante Analizza.
+
+Questa funzione permette di:
+
+* visualizzare il risultato del riconoscimento delle ventose effettuato dal modello di IA;
+* mantenere temporaneamente lo stato dell’immagine e dei punti caricati;
+* confrontare il risultato dell’analisi con l’immagine precedente;
+* ripristinare la vista originale tramite una seconda pressione del pulsante.
+
+La funzione è pensata come strumento di verifica visiva e non altera i dati salvati o le coordinate associate.
+---
 
 # Stato del Progetto
 

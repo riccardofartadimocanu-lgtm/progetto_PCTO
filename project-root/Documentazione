@@ -161,6 +161,8 @@ matrice di omografia;
 fattore di scala;
 dimensioni finali dell’immagine.
 
+Analizza:
+il pulsante analizza l'immagine calibrata e il modello di ia riconosce le ventose nell'immagine 
 
 Note finali
 L’applicazione rappresenta una base per future implementazioni, tra cui:
