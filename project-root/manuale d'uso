@@ -108,6 +108,20 @@ Procedura:
 4. Scaricare il file PNG generato.
 
 ---
+### 4.8 Analisi immagine
+
+Dopo avere eseguito la calibrazione è possibile premere il pulsante Analizza.
+
+Il sistema:
+
+1. mantiene l’immagine e i punti correnti in memoria;
+2. carica il risultato del riconoscimento delle ventose;
+3. mostra l’immagine analizzata;
+4. consente di tornare alla vista precedente premendo nuovamente il pulsante.
+
+La funzione non modifica i dati salvati e viene utilizzata per verificare visivamente il risultato dell’analisi.
+
+---
 
 ## 5. Controlli e Warning
 
