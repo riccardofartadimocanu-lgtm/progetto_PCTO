@@ -93,12 +93,18 @@
    /* =====================================================
    TOOLBAR — griglia 2 colonne
 ===================================================== */
+/* =========================
+   TOOLBAR BASE
+========================= */
 .toolbar {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
+/* =========================
+   BOTTONE BASE (STANDARD)
+========================= */
 .toolbar button {
     width: 100%;
     padding: 8px 6px;
@@ -111,9 +117,29 @@
     transition: transform 0.12s ease, box-shadow 0.2s ease, background 0.2s ease;
     box-shadow: 0 3px 10px rgba(0,0,0,0.4);
     text-align: center;
-    line-height: 1.3;
-    white-space: normal;
-    word-break: break-word;
+}
+
+/* =========================
+   HERO BUTTON (GRANDE)
+========================= */
+.hero-button {
+    padding: 14px;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+/* =========================
+   SEZIONE BOTTONI 2 COLONNE
+========================= */
+.toolbar-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+}
+
+/* IMPORTANTISSIMO: override del width */
+.toolbar-section button {
+    width: 100%;
 }
 
 .toolbar button:active {
@@ -497,7 +523,7 @@
     }
 
     /* =====================================================
-   PULSANTE CALIBRA
+   PULSANTE CALIBRA + ANALIZZA
 ===================================================== */
 #calibrateBtn {
     background: linear-gradient(135deg, #312e81, #6366f1);
@@ -505,6 +531,16 @@
 #calibrateBtn:hover:not(:disabled) {
     background: linear-gradient(135deg, #3730a3, #818cf8);
     box-shadow: 0 0 16px rgba(99,102,241,0.5);
+}
+
+#toggleImgBtn {
+    background: linear-gradient(135deg, #0ea5e9, #2563eb) !important;
+    color: white;
+}
+
+#toggleImgBtn:hover:not(:disabled) {
+    background: linear-gradient(135deg, #38bdf8, #3b82f6) !important;
+    box-shadow: 0 0 16px rgba(56,189,248,0.5);
 }
 
 /* =====================================================
