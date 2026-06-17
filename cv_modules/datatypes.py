@@ -24,7 +24,7 @@ class CalibrationOutput:
     Attributes:
         undistorted_img (np.ndarray): L'immagine corretta e raddrizzata.
         projected_points (List[List[int]]): Le nuove coordinate dei punti di riferimento (np.int64)
-        calibrazione_info (CalibrationData): Metadati di calibrazione (matrice, scala, shape). 
+        calibration_info (CalibrationData): Metadati di calibrazione (matrice, scala, shape). 
     """
     undistorted_img: np.ndarray
     projected_points: List[List[int]]

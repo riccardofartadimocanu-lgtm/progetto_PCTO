@@ -192,7 +192,7 @@ class ImageCalibration:
         # 3. Converte i punti di riferimento nelle nuove coordinate
         new_points = self.transform_points(punti_pixel)
 
-        # 4. Impacchetta tutto in un dizionario standard
+        # 4. Impacchetta tutto in una dataclass
         return CalibrationData(
             undistorted_img = undistorted_img,
             projected_points = new_points,
