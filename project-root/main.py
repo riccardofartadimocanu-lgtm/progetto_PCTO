@@ -157,6 +157,31 @@ def api_calibrate():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+# ── IMMAGINE "ANALIZZA" (riconoscimento_ventose.jpg) ───────────
+# Il file sta nella cartella radice del progetto (vedi tuo screenshot),
+# quindi NON è raggiungibile da /static/. Gli do una rotta dedicata
+# che lo pesca direttamente da BASE_DIR.
+@app.route("/api/analizza-image")
+def api_analizza_image():
+    nome_file = "riconoscimento_ventose.jpg"
+
+    # Punto di partenza della ricerca: un livello sopra BASE_DIR,
+    # così copre sia project-root sia la cartella che lo contiene.
+    radice_ricerca = os.path.dirname(BASE_DIR)
+
+    cartelle_da_saltare = {"__pycache__", "node_modules", ".git"}
+
+    for cartella_corrente, sottocartelle, files in os.walk(radice_ricerca):
+        # Non entro nelle cartelle inutili, risparmio tempo
+        sottocartelle[:] = [d for d in sottocartelle if d not in cartelle_da_saltare]
+
+        if nome_file in files:
+            path_trovato = os.path.join(cartella_corrente, nome_file)
+            return send_file(path_trovato, mimetype="image/jpeg")
+
+    return jsonify({
+        "error": f"File '{nome_file}' non trovato in nessuna sottocartella di {radice_ricerca}."
+    }), 404
+
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
-    

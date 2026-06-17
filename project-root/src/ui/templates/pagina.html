@@ -31,6 +31,7 @@
         <button id="exportCsvBtn">📊 Esporta CSV</button>
         <button id="clearBtn">🗑 Pulisci punti</button>
         <button id="calibrateBtn" class="full-width">🔧 Calibra immagine</button>
+        <button id="toggleImgBtn" class="full-width">🔬 Analizza</button>
         <input type="file" id="fileInput" hidden>
     </div>
 
@@ -97,7 +98,7 @@
         </div>
     </div>
 </div>
-<!-- Spinner calibrazione -->
+<!-- Spinner calibrazione (rimane, serve solo come indicatore di caricamento) -->
 <div id="calibSpinner" class="hidden">
     <div class="spinner-inner">
         <div class="spinner-ring"></div>
@@ -105,26 +106,6 @@
     </div>
 </div>
 
-<!-- MODAL: risultato calibrazione -->
-<div id="calibModal" class="modal hidden">
-    <div class="calib-modal-content">
-
-        <div class="calib-modal-header">
-            <h3>📐 Immagine Calibrata</h3>
-            <div class="calib-modal-actions">
-                <button id="downloadCalibBtn" class="btn-primary">⬇ Scarica PNG</button>
-                <button id="closeCalibBtn"    class="btn-secondary">✕ Chiudi</button>
-            </div>
-        </div>
-
-        <div class="calib-canvas-wrapper">
-            <canvas id="calibCanvas"></canvas>
-        </div>
-
-        <div class="calib-info-bar" id="calibInfo">—</div>
-
-    </div>
-</div>
 <script src="/static/script.js"></script>
 </body>
 </html>

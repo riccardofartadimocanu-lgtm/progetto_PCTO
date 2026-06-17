@@ -28,12 +28,6 @@ const cancelPointBtn = document.getElementById("cancelPointBtn");
 const tbody = document.querySelector("#pointsTable tbody");
 
 const calibrateBtn     = document.getElementById("calibrateBtn");
-const calibModal       = document.getElementById("calibModal");
-const calibCanvas      = document.getElementById("calibCanvas");
-const calibCtx         = calibCanvas.getContext("2d");
-const closeCalibBtn    = document.getElementById("closeCalibBtn");
-const downloadCalibBtn = document.getElementById("downloadCalibBtn");
-const calibInfo        = document.getElementById("calibInfo");
 const calibSpinner     = document.getElementById("calibSpinner");
 
 editBtn.classList.add("edit-off");
@@ -945,7 +939,7 @@ modeBtn.onclick = () => {
 };
 
 /* =====================================================
-   CALIBRAZIONE
+   CALIBRAZIONE (ora applicata DIRETTAMENTE nell'editor, niente popup)
 ===================================================== */
 calibrateBtn.onclick = async () => {
     if (!state.loaded) {
@@ -988,7 +982,7 @@ calibrateBtn.onclick = async () => {
             return;
         }
 
-        showCalibResult(result);
+        applyCalibToEditor(result);
 
     } catch (err) {
         alert("Errore di rete: " + err.message);
@@ -998,58 +992,112 @@ calibrateBtn.onclick = async () => {
     }
 };
 
-function showCalibResult(result) {
+/* Sostituisce l'immagine/i punti nell'editor con il risultato calibrato,
+   niente più finestra separata: tutto avviene sul canvas principale. */
+function applyCalibToEditor(result) {
     const img = new Image();
 
     img.onload = () => {
-        // Disegna l'immagine raddrizzata
-        calibCanvas.width  = img.width;
-        calibCanvas.height = img.height;
-        calibCtx.drawImage(img, 0, 0);
+        state.image  = img;
+        state.loaded = true;
+        state.scale  = 1;
+        pan.offsetX  = 0;
+        pan.offsetY  = 0;
 
-        // Mirini sui punti proiettati
-        result.projected_points.forEach((pt, i) => {
-            const [px, py] = pt;
-            const size     = 9;
-            const color    = "#facc15";
+        // Rimappo i punti esistenti sulle nuove coordinate proiettate,
+        // mantenendo i valori reali (xm/ym) già inseriti.
+        state.points = state.points.map((p, i) => ({
+            x:  result.projected_points[i][0],
+            y:  result.projected_points[i][1],
+            xm: p.xm,
+            ym: p.ym
+        }));
 
-            calibCtx.strokeStyle = color;
-            calibCtx.lineWidth   = 2;
+        state.saved = false;
+        selectedIndex = null;
+        hoverIndex    = null;
 
-            calibCtx.beginPath();
-            calibCtx.moveTo(px - size, py);
-            calibCtx.lineTo(px + size, py);
-            calibCtx.stroke();
-
-            calibCtx.beginPath();
-            calibCtx.moveTo(px, py - size);
-            calibCtx.lineTo(px, py + size);
-            calibCtx.stroke();
-
-            calibCtx.fillStyle = color;
-            calibCtx.font      = "bold 12px monospace";
-            calibCtx.fillText(`#${i + 1}`, px + size + 3, py - size);
-        });
-
-        // Barra info
-        calibInfo.textContent =
-            `Scala: ${result.scale_factor.toFixed(3)} px/mm  |  ` +
-            `Output: ${result.output_shape[0]} × ${result.output_shape[1]} px  |  ` +
-            `Punti: ${result.projected_points.length}`;
-
-        // Download
-        downloadCalibBtn.onclick = () => {
-            const idImg = document.getElementById("idImmagine").value.trim() || "img";
-            const a     = document.createElement("a");
-            a.href      = calibCanvas.toDataURL("image/png");
-            a.download  = `calibrated_${idImg}.png`;
-            a.click();
-        };
-
-        calibModal.classList.remove("hidden");
+        render();
     };
 
     img.src = result.imageBase64;
 }
 
-closeCalibBtn.onclick = () => calibModal.classList.add("hidden");   
+/* =====================================================
+   TOGGLE IMMAGINE ANALIZZA (clicca → carica, riclicca → torna indietro)
+===================================================== */
+const toggleImgBtn = document.getElementById("toggleImgBtn");
+let savedBeforeToggle = null;
+let isShowingVentose  = false;
+
+const LABEL_ANALIZZA  = "🔬 Analizza";
+const LABEL_TORNA     = "↩️ Torna indietro";
+
+toggleImgBtn.onclick = () => {
+    if (!isShowingVentose) {
+        // Salvo stato attuale per poterlo ripristinare dopo
+        savedBeforeToggle = {
+            src:     state.image ? state.image.src : null,
+            loaded:  state.loaded,
+            points:  JSON.parse(JSON.stringify(state.points)),
+            scale:   state.scale,
+            offsetX: pan.offsetX,
+            offsetY: pan.offsetY,
+            saved:   state.saved
+        };
+
+        const img = new Image();
+
+        img.onload = () => {
+            state.image  = img;
+            state.loaded = true;
+            state.points = [];
+            state.scale  = 1;
+            pan.offsetX  = 0;
+            pan.offsetY  = 0;
+            state.saved  = false;
+
+            selectedIndex = null;
+            hoverIndex    = null;
+
+            isShowingVentose = true;
+            toggleImgBtn.innerText = LABEL_TORNA;
+
+            render();
+        };
+
+        img.onerror = () => {
+            alert("Impossibile caricare l'immagine. Controlla che 'riconoscimento_ventose.jpg' esista nella cartella del progetto (vedi BASE_DIR in app.py).");
+        };
+
+        // Rotta dedicata: il file sta nella radice del progetto, non in /static
+        img.src = "/api/analizza-image";
+
+    } else {
+        if (!savedBeforeToggle || !savedBeforeToggle.src) {
+            isShowingVentose = false;
+            toggleImgBtn.innerText = LABEL_ANALIZZA;
+            return;
+        }
+
+        const img = new Image();
+        img.onload = () => {
+            state.image  = img;
+            state.loaded = savedBeforeToggle.loaded;
+            state.points = savedBeforeToggle.points;
+            state.scale  = savedBeforeToggle.scale;
+            pan.offsetX  = savedBeforeToggle.offsetX;
+            pan.offsetY  = savedBeforeToggle.offsetY;
+            state.saved  = savedBeforeToggle.saved;
+
+            selectedIndex = null;
+            hoverIndex    = null;
+
+            isShowingVentose = false;
+            toggleImgBtn.innerText = LABEL_ANALIZZA;
+
+            render();
+        };
+        img.src = savedBeforeToggle.src;
+    }
+};
