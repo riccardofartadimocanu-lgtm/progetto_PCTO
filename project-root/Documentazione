@@ -166,7 +166,6 @@ Note finali
 L’applicazione rappresenta una base per future implementazioni, tra cui:
 conversione automatica coordinate pixel → coordinate reali;
 gestione avanzata dei dataset;
-salvataggio persistente dei progetti;
 elaborazione automatica delle immagini;
 integrazione con pipeline di analisi;
 esportazione dei dati in formati aggiuntivi.
